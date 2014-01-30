@@ -4,6 +4,8 @@
 #include <Eigen/Dense>
 #include <Eigen/IterativeLinearSolvers>
 
+#include "paramParse/parser.h"
+
 // THIS WORKS CORRECTLY! DO NOT TOUCH WITHOUT A BACKUP!
 
 using namespace Eigen;
@@ -21,13 +23,22 @@ MatrixXd makeBCLaplacianV (const int, const int);
 MatrixXd makeBCDivX (const int, const int);
 MatrixXd makeBCDivY (const int, const int);
 
-int main () {
-  const int M = 20; // Number of rows
-  const int N = 40; // Number of columns
+int main(int argc, char ** argv) {
 
-  const double viscosity = 1.0;
+  int M, N;
+  double viscosity, y_extent, h;
 
-  const double h = M_PI / M;
+  string paramFile = argv[1];
+
+  paramParser pp(paramFile);
+
+  pp.getParamInt ("M", M); // Number of rows
+  pp.getParamInt ("N", N); // Number of columns
+
+  pp.getParamDouble ("viscosity", viscosity);
+
+  pp.getParamDouble ("y_extent", y_extent);
+  h = y_extent / N;
 
   // Set up locations of data in memory
   double * solnData     = new double[3 * M * N - M - N];
@@ -137,7 +148,7 @@ int main () {
     for (int j = 0; j < N; ++j)
       analyticV (i, j) = - sin ((j + 0.5) * h) * cos ((i + 1) * h);
 
-  cout << (uSolnMatrix - analyticU).norm() << "\t" << (vSolnMatrix - analyticV).norm() << endl;
+  cout << sqrt((uSolnMatrix - analyticU).squaredNorm() * h * h) << "\t" << sqrt((vSolnMatrix - analyticV).squaredNorm() * h * h) << endl;
 
   return 0;
 }
