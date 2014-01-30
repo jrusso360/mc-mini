@@ -1,126 +1,267 @@
 #include <iostream>
+#include <iomanip>
 
 #include <Eigen/Dense>
+#include <Eigen/IterativeLinearSolvers>
+
+// THIS WORKS CORRECTLY! DO NOT TOUCH WITHOUT A BACKUP!
 
 using namespace Eigen;
 using namespace std;
 
-MatrixXd makeDivX (const unsigned int);
-MatrixXd makeDivY (const unsigned int);
-MatrixXd makeGradX (const unsigned int);
-MatrixXd makeGradY (const unsigned int);
-MatrixXd makeLaplacian (const unsigned int);
+MatrixXd makeDivX (const int, const int);
+MatrixXd makeDivY (const int, const int);
+MatrixXd makeGradX (const int, const int);
+MatrixXd makeGradY (const int, const int);
+MatrixXd makeLaplacianU (const int, const int);
+MatrixXd makeLaplacianV (const int, const int);
+
+MatrixXd makeBCLaplacianU (const int, const int);
+MatrixXd makeBCLaplacianV (const int, const int);
+MatrixXd makeBCDivX (const int, const int);
+MatrixXd makeBCDivY (const int, const int);
 
 int main () {
-  const unsigned int N = 4;
+  const int M = 20; // Number of rows
+  const int N = 40; // Number of columns
 
   const double viscosity = 1.0;
 
-  double * rhsData = new double[(3 * N + 2) * N];
-  double * uData = rhsData;
-  double * vData = rhsData + (N * (N + 1));
-  double * pData = rhsData + (N * (2 * N + 2));
+  const double h = M_PI / M;
+
+  // Set up locations of data in memory
+  double * solnData     = new double[3 * M * N - M - N];
+  double * boundaryData = new double[2 * M + 2 * N];
+  double * forcingData  = new double[2 * M * N - M - N];
+  double * rhsData      = new double[3 * M * N - M - N];
+  // U data pointers
+  double * uSolnData     = solnData;
+  double * uBoundaryData = boundaryData;
+  double * uForcingData  = forcingData;
+  double * uRhsData      = rhsData;
+  // V data pointers
+  double * vSolnData     = solnData     + (M * (N - 1));
+  double * vBoundaryData = boundaryData + 2 * M;
+  double * vForcingData  = forcingData  + (M * (N - 1));
+  double * vRhsData      = rhsData      + (M * (N - 1));
+  // P data pointers
+  double * pSolnData = solnData + (2 * M * N - M - N);
+  double * pRhsData  = rhsData  + (N * (2 * N - 2));
   
-  Map<VectorXd> rhsVect (rhsData, (3 * N + 2) * N);
+  // Set up vector maps to data
+  Map<VectorXd> solnVect     (solnData,     3 * M * N - M - N);
+  Map<VectorXd> boundaryVect (boundaryData, 2 * M + 2 * N);
+  Map<VectorXd> forcingVect  (forcingData,  2 * M * N - M - N);
+  Map<VectorXd> rhsVect      (rhsData,      3 * M * N - M - N);
 
-  Map<VectorXd> uVect (uData, N * (N + 1));
-  Map<Matrix<double, Dynamic, Dynamic, RowMajor> > uMatrix (uData, N, N + 1);
+  // U vector maps
+  Map<VectorXd> uSolnVect     (uSolnData,     M * (N - 1));
+  Map<VectorXd> uBoundaryVect (uBoundaryData, 2 * M);
+  Map<VectorXd> uForcingVect  (uForcingData,  M * (N - 1));
+  Map<VectorXd> uVect         (uRhsData,      M * (N - 1));
+  // U matrix maps
+  Map<Matrix<double, Dynamic, Dynamic, RowMajor> > uSolnMatrix     (uSolnData,     M, N - 1);
+  Map<Matrix<double, Dynamic, Dynamic, RowMajor> > uBoundaryMatrix (uBoundaryData, M, 2);
+  Map<Matrix<double, Dynamic, Dynamic, RowMajor> > uForcingMatrix  (uForcingData,  M, N - 1);
+  Map<Matrix<double, Dynamic, Dynamic, RowMajor> > uRhsMatrix      (uRhsData,      M, N - 1);
 
-  Map<VectorXd> vVect (vData, N * (N + 1));
-  Map<Matrix<double, Dynamic, Dynamic, RowMajor> > vMatrix (vData, N + 1, N);
+  //V vector maps
+  Map<VectorXd> vSolnVect     (vSolnData,     N * (M - 1));
+  Map<VectorXd> vBoundaryVect (vBoundaryData, 2 * N);
+  Map<VectorXd> vForcingVect  (vForcingData,  N * (M - 1));
+  Map<VectorXd> vRhsVect      (vRhsData,      N * (M - 1));
+  // V matrix maps
+  Map<Matrix<double, Dynamic, Dynamic, RowMajor> > vSolnMatrix     (vSolnData,     M - 1, N);
+  Map<Matrix<double, Dynamic, Dynamic, RowMajor> > vBoundaryMatrix (vBoundaryData, 2,     N);
+  Map<Matrix<double, Dynamic, Dynamic, RowMajor> > vForcingMatrix  (vForcingData,  M - 1, N);
+  Map<Matrix<double, Dynamic, Dynamic, RowMajor> > vRhsMatrix      (vRhsData,      M - 1, N);
 
-  Map<VectorXd> pVect (pData,     N * N);
-  Map<Matrix<double, Dynamic, Dynamic, RowMajor> > pMatrix (pData, N, N);
+  // P vector maps
+  Map<VectorXd> pSolnVect (pSolnData, M * N);
+  Map<VectorXd> pRhsVect  (pRhsData,  M * N);
+  // P matrix maps
+  Map<Matrix<double, Dynamic, Dynamic, RowMajor> > pSolnMatrix (pSolnData, M, N);
+  Map<Matrix<double, Dynamic, Dynamic, RowMajor> > pRhsMatrix  (pRhsData,  M, N);
 
-  MatrixXd A = MatrixXd::Zero (N * (N - 1) + N * (N - 1) + N * N, N * (N + 1) + N * (N + 1) + N * N);
+  MatrixXd A              = MatrixXd::Zero (3 * M * N - M - N, 3 * M * N - M - N);
+  MatrixXd forcingMatrix  = MatrixXd::Zero (3 * M * N - M - N, 2 * M * N - M - N);
+  MatrixXd boundaryMatrix = MatrixXd::Zero (3 * M * N - M - N, 2 * M + 2 * N);
+
+  A.block (0,                 0,                 M * (N - 1), M * (N - 1)) = -viscosity * makeLaplacianU (M, N) / (h * h);
+  A.block (M * (N - 1),       M * (N - 1),       (M - 1) * N, (M - 1) * N) = -viscosity * makeLaplacianV (M, N) / (h * h);
+  A.block (0,                 2 * M * N - M - N, M * (N - 1), M * N)       = makeGradX (M, N) / h;
+  A.block (M * (N - 1),       2 * M * N - M - N, (M - 1) * N, M * N)       = makeGradY (M, N) / h;
+  A.block (2 * M * N - M - N, 0,                 M * N,       M * (N - 1)) = makeDivX (M, N) / h;
+  A.block (2 * M * N - M - N, M * (N - 1),       M * N,       (M - 1) * N) = makeDivY (M, N) / h;
   
-  A.block (0, 0, N * (N - 1), N * (N + 1))                     = -viscosity * makeLaplacian (N); /* MatrixXd::Constant (N * (N - 1), N * (N + 1), 1); */
-  A.block (N * (N - 1), N * (N + 1), N * (N - 1), N * (N + 1)) = -viscosity * makeLaplacian (N); /* MatrixXd::Constant (N * (N - 1), N * (N + 1), 1); */
-  A.block (0, 2 * N * (N + 1), N * (N - 1), N * N)             = makeGradX (N); /* MatrixXd::Constant (N * (N - 1), N * N, 2); */
-  A.block (N * (N - 1), 2 * N * (N + 1), N * (N - 1), N * N)   = makeGradY (N); /* MatrixXd::Constant (N * (N - 1), N * N, 3); */
-  A.block (2 * N * (N - 1), 0, N * N, N * (N + 1))             = makeDivX (N); /* MatrixXd::Constant (N * N, N * (N + 1), 4); */
-  A.block (2 * N * (N - 1), N * (N + 1), N * N, N * (N + 1))   = makeDivY (N); /* MatrixXd::Constant (N * N, N * (N + 1), 5); */
+  forcingMatrix.block (0, 0, 2 * M * N - M - N, 2 * M * N - M - N)  = MatrixXd::Identity (2 * M * N - M - N, 2 * M * N - M - N);
 
-  uVect = VectorXd::LinSpaced (N * (N + 1), 0, N * (N + 1) - 1);
-  vVect = VectorXd::LinSpaced (N * (N + 1), 0, N * (N + 1) - 1);
-  pVect = VectorXd::LinSpaced (N * N,       0, N * N - 1);
-
-  cout << A << endl;
-
-  //  cout << pMatrix.colwise().reverse() << endl;
+  boundaryMatrix.block (0,                 0,     M * (N - 1), 2 * M) = viscosity * makeBCLaplacianU (M, N) / (h * h);
+  boundaryMatrix.block (M * (N - 1),       2 * M, (M - 1) * N, 2 * N) = viscosity * makeBCLaplacianV (M, N) / (h * h);
+  boundaryMatrix.block (2 * M * N - M - N, 0,     M * N,       2 * M) = makeBCDivX (M, N) / h;
+  boundaryMatrix.block (2 * M * N - M - N, 2 * M, M * N,       2 * N) = makeBCDivY (M, N) / h;
   
+  for (int i = 0; i < M; ++i) 
+    for (int j = 0; j < N - 1; ++j) 
+      uForcingMatrix (i, j) = 3 * cos ((j + 1) * h) * sin ((i + 0.5) * h);
+  for (int i = 0; i < M - 1; ++i)
+    for (int j = 0; j < N; ++j) 
+      vForcingMatrix (i, j) = -1 * sin ((j + 0.5) * h) * cos ((i + 1) * h);
+  
+  for (int i = 0; i < M; ++i)
+    for (int j = 0; j < 2; ++j)
+      uBoundaryMatrix (i, j) = cos (j * N * h) * sin ((i + 0.5) * h);
+
+  for (int i = 0; i < 2; ++i)
+    for (int j = 0; j < N; ++j)
+      vBoundaryMatrix (i, j) = -1 * sin ((j + 0.5) * h) * cos (i * M * h);
+  
+  rhsVect = forcingMatrix * forcingVect + boundaryMatrix * boundaryVect;
+
+  solnVect = A.householderQr().solve(rhsVect);
+
+  /*
+  cout << uSolnMatrix.colwise().reverse() << endl << endl
+       << vSolnMatrix.colwise().reverse() << endl << endl
+       << pSolnMatrix.colwise().reverse() << endl << endl;
+*/
+  MatrixXd analyticU;
+  analyticU.resizeLike(uSolnMatrix);
+  for (int i = 0; i < M; ++i)
+    for (int j = 0; j < N - 1; ++j)
+      analyticU (i, j) = cos ((j + 1) * h) * sin ((i + 0.5) * h);
+
+  MatrixXd analyticV;
+  analyticV.resizeLike(vSolnMatrix);
+  for (int i = 0; i < M - 1; ++i)
+    for (int j = 0; j < N; ++j)
+      analyticV (i, j) = - sin ((j + 0.5) * h) * cos ((i + 1) * h);
+
+  cout << (uSolnMatrix - analyticU).norm() << "\t" << (vSolnMatrix - analyticV).norm() << endl;
+
   return 0;
 }
 
-MatrixXd makeLaplacian (const unsigned int N) {
-  MatrixXd laplacian = MatrixXd::Zero (N * (N - 1), N * (N + 1));
-  MatrixXd laplacianBlock = MatrixXd::Zero (N - 1, N + 1);
+// Create laplacian operator matrix for U
+MatrixXd makeLaplacianU (const int M, const int N) {
+  // Laplacian maps U -> U_0, so requires an (M * (N - 1))X(M * (N - 1)) matrix.
+  MatrixXd laplacian = MatrixXd::Zero (M * (N - 1), M * (N - 1));
+  MatrixXd laplacianBlock = MatrixXd::Zero (N - 1, N - 1);
 
-  laplacianBlock.diagonal (1) = VectorXd::Constant (N - 1,  4);
-  laplacianBlock.diagonal () = laplacianBlock.diagonal (2) = VectorXd::Constant (N - 1, -1); 
-  laplacianBlock (0, 0) = laplacianBlock (N - 2, N) = 0;
+  laplacianBlock.diagonal () = VectorXd::Constant (N - 1,  -4);
+  laplacianBlock.diagonal (-1) = laplacianBlock.diagonal (1) = VectorXd::Constant (N - 2, 1);
 
-  for (int i = 0; i < N; ++i)
-    laplacian.block (i * (N - 1), i * (N + 1), (N - 1), (N + 1)) = laplacianBlock;
+  for (int i = 0; i < M; ++i) {
+    laplacianBlock.diagonal () = VectorXd::Constant (N - 1, -4);
+    if ((i == 0) || (i == M - 1))
+      laplacianBlock.diagonal () = VectorXd::Constant (N - 1, -5);
 
-  laplacianBlock = MatrixXd::Zero (N - 1, N + 1);
-  laplacianBlock.diagonal (1) = VectorXd::Constant (N - 1, -1);
+    laplacian.block (i * (N - 1), i * (N - 1), (N - 1), (N - 1)) = laplacianBlock;
+  }
 
-  for (int i = 0; i < N - 1; ++i) 
-    laplacian.block (i * (N - 1), (i + 1) * (N + 1), N - 1, N + 1) = laplacian.block ((i + 1) * (N - 1), i * (N + 1), N - 1, N + 1) = laplacianBlock;
-
-  laplacian (0, 1) = laplacian (N * (N - 1) - 1, N * (N + 1) - 2) = 5;
+  laplacian.diagonal (N - 1)    = VectorXd::Constant ((N - 1) * (M - 1), 1);
+  laplacian.diagonal (-(N - 1)) = VectorXd::Constant ((N - 1) * (M - 1), 1);
 
   return laplacian;
 }
 
-MatrixXd makeDivX (const unsigned int N) {
-  MatrixXd divX = MatrixXd::Zero (N * N, (N + 1) * N);
-  MatrixXd divBlock = MatrixXd::Zero (N , N + 1);
-
-  divBlock.diagonal () = VectorXd::Constant  (N, -1);
-  divBlock.diagonal (1) = VectorXd::Constant (N,  1);
+// Create laplacian operator matrix for V.
+MatrixXd makeLaplacianV (const int M, const int N) {
+  // Laplacian maps V -> V_0, so requires an ((M - 1) * N)X((M - 1) * N) matrix.
+  MatrixXd laplacian = MatrixXd::Zero ((M - 1) * N, (M - 1) * N);
+  MatrixXd laplacianBlock = MatrixXd::Zero (N, N);
   
-  // Handle zero boundaries by setting x-boundaries to 0.
-  divBlock (0, 0) = divBlock (N - 1, N) = 0;
+  laplacianBlock.diagonal () = VectorXd::Constant (N, -4);
+  laplacianBlock.diagonal (-1) = laplacianBlock.diagonal (1) = VectorXd::Constant (N - 1, 1);
+  laplacianBlock (0, 0) = laplacianBlock (N - 1, N - 1) = -5;
 
-  for (int i = 0; i < N; ++i)
-    divX.block (i * N, i * (N + 1), N, N + 1) = divBlock;  
-    
+  for (int i = 0; i < M - 1; ++i) 
+    laplacian.block (i * N, i * N, N, N) = laplacianBlock;
+
+  laplacian.diagonal (N) = laplacian.diagonal (-N) = VectorXd::Constant ((M - 2) * N, 1);
+
+  return laplacian;
+}
+
+// Create X-dimension gradient operator matrix
+MatrixXd makeGradX (const int M, const int N) {
+  
+  return -1 * makeDivX (M, N).transpose();
+}
+
+// Create Y-dimension gradient operator matrix
+MatrixXd makeGradY (const int M, const int N) {
+  
+  return -1 * makeDivY (M, N).transpose();
+}
+
+// Create X-dimension divergence operator matrix
+MatrixXd makeDivX (const int M, const int N) {
+  MatrixXd divX     = MatrixXd::Zero (M * N, M * (N - 1));
+  MatrixXd divBlock = MatrixXd::Zero (N,     N - 1);
+
+  divBlock.diagonal ()   = VectorXd::Constant (N - 1,  1);
+  divBlock.diagonal (-1) = VectorXd::Constant (N - 1, -1);
+
+  for (int i = 0; i < M; ++i) 
+    divX.block (i * N, i * (N - 1), N, N - 1) = divBlock;
+
   return divX;
 }
 
-MatrixXd makeDivY (const unsigned int N) {
-  MatrixXd divY = MatrixXd::Zero (N * N, N * (N + 1));
-  MatrixXd divBlock = MatrixXd::Zero (N, N);
+// Create Y-dimension divergence operator matrix
+MatrixXd makeDivY (const int M, const int N) {
+  MatrixXd divY = MatrixXd::Zero (M * N, (M - 1) * N);
 
-  divY.diagonal ()  = VectorXd::Constant (N * N, -1);
-  divY.diagonal (N) = VectorXd::Constant (N * N,  1);
-
-  // Handle zero boundaries by setting y-boundaries to 0.
-  divY.block (0, 0, N, N) = divY.block (N * (N - 1), N * N, N, N) = divBlock;
+  divY.diagonal ()   = VectorXd::Constant ((M - 1) * N,  1);
+  divY.diagonal (-N) = VectorXd::Constant ((M - 1) * N, -1);
 
   return divY;
 }
 
-MatrixXd makeGradX (const unsigned int N) {
-  MatrixXd gradX = MatrixXd::Zero (N * (N - 1), N * N);
-  MatrixXd gradBlock = MatrixXd::Zero (N - 1, N);
 
-  gradBlock.diagonal () = VectorXd::Constant  (N - 1, -1);
-  gradBlock.diagonal (1) = VectorXd::Constant (N - 1,  1);
 
-  for (int i = 0; i < N; ++i)
-    gradX.block (i * (N - 1), i * N, N - 1, N) = gradBlock;
-  
-  return gradX;
+MatrixXd makeBCLaplacianU (const int M, const int N) {
+  MatrixXd laplacianBC      = MatrixXd::Zero (M * (N - 1), 2 * M);
+  MatrixXd laplacianBCBlock = MatrixXd::Zero (N - 1,       2);
+
+  laplacianBCBlock (0, 0) = laplacianBCBlock (N - 2, 1) = 1;
+
+  for (int i = 0; i < M; ++i)
+    laplacianBC.block (i * (N - 1), i * 2, N - 1, 2) = laplacianBCBlock;
+
+  return laplacianBC;
 }
 
-MatrixXd makeGradY (const unsigned int N) {
-  MatrixXd gradY = MatrixXd::Zero (N * (N - 1), N * N);
-  
-  gradY.diagonal ()  = VectorXd::Constant (N * (N - 1), -1);
-  gradY.diagonal (N) = VectorXd::Constant (N * (N - 1),  1);
-  
-  return gradY;
+MatrixXd makeBCLaplacianV (const int M, const int N) {
+  MatrixXd laplacianBC      = MatrixXd::Zero ((M - 1) * N, 2 * N);
+  MatrixXd laplacianBCBlock = MatrixXd::Zero (N, N);
+
+  laplacianBCBlock.diagonal () = VectorXd::Constant (N, 1);
+
+  laplacianBC.block (0, 0, N, N) = laplacianBCBlock;
+  laplacianBC.block ((M - 2) * N, N, N, N) = laplacianBCBlock;
+
+  return laplacianBC;
+}
+
+MatrixXd makeBCDivX (const int M, const int N) {
+  MatrixXd divBC      = MatrixXd::Zero (M * N, 2 * M);
+  MatrixXd divBCBlock = MatrixXd::Zero (N,     2);
+
+  divBCBlock (0, 0) = 1; divBCBlock (N - 1, 1) = -1;
+
+  for (int i = 0; i < M; ++i)
+    divBC.block (i * N, i * 2, N, 2) = divBCBlock;
+
+  return divBC;
+}
+
+MatrixXd makeBCDivY (const int M, const int N) {
+  MatrixXd divBC      = MatrixXd::Zero     (M * N, 2 * N);
+
+  divBC.block (0,           0, N, N) =  MatrixXd::Identity (N, N);
+  divBC.block ((M - 1) * N, N, N, N) =  -1 * MatrixXd::Identity (N, N);
+
+  return divBC;
 }
