@@ -1,28 +1,93 @@
 #include <iostream>
 #include <iomanip>
 
+#include <Eigen/OrderingMethods>
+#include <Eigen/SparseCholesky>
+#include <Eigen/SparseQR>
+#include <Eigen/Sparse>
 #include <Eigen/Dense>
-#include <Eigen/IterativeLinearSolvers>
 
 #include "paramParse/parser.h"
 
+#include "matrixForms/denseForms.h"
+
 // THIS WORKS CORRECTLY! DO NOT TOUCH WITHOUT A BACKUP!
 
+using namespace DenseForms;
 using namespace Eigen;
 using namespace std;
+/*
+SparseMatrix<double> makeA (const int, const int, const double, const double);
+void makeLaplacianXBlock (vector<Triplet<double> >& tripletList,
+                          const int M0, 
+                          const int N0, 
+                          const int M, 
+                          const int N, 
+                          const double h, 
+                          const double viscosity);
+void makeLaplacianYBlock (vector<Triplet<double> >& tripletList,
+                          const int M0,
+                          const int N0,
+                          const int M,
+                          const int N,
+                          const double h,
+                          const double viscosity);
+void makeGradXBlock      (vector<Triplet<double> >& tripletList,
+                          const int M0,
+                          const int N0,
+                          const int M,
+                          const int N,
+                          const double h);
+void makeGradYBlock      (vector<Triplet<double> >& tripletList,
+                          const int M0,
+                          const int N0,
+                          const int M,
+                          const int N,
+                          const double h);
+void makeDivXBlock       (vector<Triplet<double> >& tripletList,
+                          const int M0,
+                          const int N0,
+                          const int M,
+                          const int N,
+                          const double h);
+void makeDivYBlock       (vector<Triplet<double> >& tripletList,
+                          const int M0,
+                          const int N0,
+                          const int M,
+                          const int N,
+                          const double h);
 
-MatrixXd makeDivX (const int, const int);
-MatrixXd makeDivY (const int, const int);
-MatrixXd makeGradX (const int, const int);
-MatrixXd makeGradY (const int, const int);
-MatrixXd makeLaplacianU (const int, const int);
-MatrixXd makeLaplacianV (const int, const int);
 
-MatrixXd makeBCLaplacianU (const int, const int);
-MatrixXd makeBCLaplacianV (const int, const int);
-MatrixXd makeBCDivX (const int, const int);
-MatrixXd makeBCDivY (const int, const int);
+SparseMatrix<double> makeForcingMatrix (const int, const int);
 
+SparseMatrix<double> makeBoundaryMatrix (const int, const int, const double, const double);
+void makeBCLaplacianXBlock (vector<Triplet<double> >& tripletList,
+                            const int M0,
+                            const int N0,
+                            const int M,
+                            const int N,
+                            const double h,
+                            const double viscosity);
+void makeBCLaplacianYBlock (vector<Triplet<double> >& tripletList,
+                            const int M0,
+                            const int N0,
+                            const int M,
+                            const int N,
+                            const double h,
+                            const double viscosity);
+void makeBCDivXBlock (vector<Triplet<double> >& tripletList,
+                      const int M0,
+                      const int N0,
+                      const int M,
+                      const int N,
+                      const double h);
+void makeBCDivYBlock (vector<Triplet<double> >& tripletList,
+                      const int M0,
+                      const int N0,
+                      const int M,
+                      const int N,
+                      const double h);
+*/
 int main(int argc, char ** argv) {
 
   int M, N;
@@ -94,23 +159,18 @@ int main(int argc, char ** argv) {
   Map<Matrix<double, Dynamic, Dynamic, RowMajor> > pSolnMatrix (pSolnData, M, N);
   Map<Matrix<double, Dynamic, Dynamic, RowMajor> > pRhsMatrix  (pRhsData,  M, N);
 
-  MatrixXd A              = MatrixXd::Zero (3 * M * N - M - N, 3 * M * N - M - N);
-  MatrixXd forcingMatrix  = MatrixXd::Zero (3 * M * N - M - N, 2 * M * N - M - N);
-  MatrixXd boundaryMatrix = MatrixXd::Zero (3 * M * N - M - N, 2 * M + 2 * N);
+  /*
+  SparseMatrix<double> A  = makeA (M, N, h, viscosity); 
+  A.makeCompressed();
+  */
 
-  A.block (0,                 0,                 M * (N - 1), M * (N - 1)) = -viscosity * makeLaplacianU (M, N) / (h * h);
-  A.block (M * (N - 1),       M * (N - 1),       (M - 1) * N, (M - 1) * N) = -viscosity * makeLaplacianV (M, N) / (h * h);
-  A.block (0,                 2 * M * N - M - N, M * (N - 1), M * N)       = makeGradX (M, N) / h;
-  A.block (M * (N - 1),       2 * M * N - M - N, (M - 1) * N, M * N)       = makeGradY (M, N) / h;
-  A.block (2 * M * N - M - N, 0,                 M * N,       M * (N - 1)) = makeDivX (M, N) / h;
-  A.block (2 * M * N - M - N, M * (N - 1),       M * N,       (M - 1) * N) = makeDivY (M, N) / h;
+  MatrixXd A;  makeA (A, M, N, h, viscosity);
+  MatrixXd forcingMatrix; makeForcingMatrix  (forcingMatrix, M, N); 
+  MatrixXd boundaryMatrix; makeBoundaryMatrix (boundaryMatrix, M, N, h, viscosity); 
   
-  forcingMatrix.block (0, 0, 2 * M * N - M - N, 2 * M * N - M - N)  = MatrixXd::Identity (2 * M * N - M - N, 2 * M * N - M - N);
-
-  boundaryMatrix.block (0,                 0,     M * (N - 1), 2 * M) = viscosity * makeBCLaplacianU (M, N) / (h * h);
-  boundaryMatrix.block (M * (N - 1),       2 * M, (M - 1) * N, 2 * N) = viscosity * makeBCLaplacianV (M, N) / (h * h);
-  boundaryMatrix.block (2 * M * N - M - N, 0,     M * N,       2 * M) = makeBCDivX (M, N) / h;
-  boundaryMatrix.block (2 * M * N - M - N, 2 * M, M * N,       2 * N) = makeBCDivY (M, N) / h;
+  cout << A << endl << endl
+       << forcingMatrix << endl << endl
+       << boundaryMatrix << endl << endl;
   
   for (int i = 0; i < M; ++i) 
     for (int j = 0; j < N - 1; ++j) 
@@ -126,16 +186,19 @@ int main(int argc, char ** argv) {
   for (int i = 0; i < 2; ++i)
     for (int j = 0; j < N; ++j)
       vBoundaryMatrix (i, j) = -1 * sin ((j + 0.5) * h) * cos (i * M * h);
-  
+ 
   rhsVect = forcingMatrix * forcingVect + boundaryMatrix * boundaryVect;
-
+ /* 
+  SparseLU<SparseMatrix<double>, COLAMDOrdering<int> > solver;
+  solver.analyzePattern(A);
+  solver.factorize(A);
+*/
   solnVect = A.householderQr().solve(rhsVect);
 
-  /*
   cout << uSolnMatrix.colwise().reverse() << endl << endl
        << vSolnMatrix.colwise().reverse() << endl << endl
        << pSolnMatrix.colwise().reverse() << endl << endl;
-*/
+
   MatrixXd analyticU;
   analyticU.resizeLike(uSolnMatrix);
   for (int i = 0; i < M; ++i)
@@ -152,127 +215,220 @@ int main(int argc, char ** argv) {
 
   return 0;
 }
+/*
+SparseMatrix<double> makeA (const int M, 
+                            const int N, 
+                            const double h, 
+                            const double viscosity) {
+  SparseMatrix<double> A (3 * M * N - M - N, 3 * M * N - M -N);
+  A.reserve (21 * M * N - 7 * M - 7 * N);
+  
+  vector<Triplet<double> > tripletList;
+  makeLaplacianXBlock (tripletList, 0,                 0,                 M, N, h, viscosity);
+  makeLaplacianYBlock (tripletList, M * (N - 1),       M * (N - 1),       M, N, h, viscosity);
+  makeGradXBlock      (tripletList, 0,                 2 * M * N - M - N, M, N, h);
+  makeGradYBlock      (tripletList, M * (N - 1),       2 * M * N - M - N, M, N, h);
+  makeDivXBlock       (tripletList, 2 * M * N - M - N, 0,                 M, N, h);
+  makeDivYBlock       (tripletList, 2 * M * N - M - N, M * (N - 1),       M, N, h);
 
-// Create laplacian operator matrix for U
-MatrixXd makeLaplacianU (const int M, const int N) {
-  // Laplacian maps U -> U_0, so requires an (M * (N - 1))X(M * (N - 1)) matrix.
-  MatrixXd laplacian = MatrixXd::Zero (M * (N - 1), M * (N - 1));
-  MatrixXd laplacianBlock = MatrixXd::Zero (N - 1, N - 1);
+  A.setFromTriplets (tripletList.begin(), tripletList.end());
 
-  laplacianBlock.diagonal () = VectorXd::Constant (N - 1,  -4);
-  laplacianBlock.diagonal (-1) = laplacianBlock.diagonal (1) = VectorXd::Constant (N - 2, 1);
+  return A;
+}
+
+void makeLaplacianXBlock (vector<Triplet<double> >& tripletList, 
+                          const int M0, 
+                          const int N0,
+                          const int M,
+                          const int N,
+                          const double h,
+                          const double viscosity) {
 
   for (int i = 0; i < M; ++i) {
-    laplacianBlock.diagonal () = VectorXd::Constant (N - 1, -4);
-    if ((i == 0) || (i == M - 1))
-      laplacianBlock.diagonal () = VectorXd::Constant (N - 1, -5);
-
-    laplacian.block (i * (N - 1), i * (N - 1), (N - 1), (N - 1)) = laplacianBlock;
+    for (int x = 0; x < N - 1; ++x) {
+      if ((i == 0) || (i == M - 1))
+        tripletList.push_back (Triplet<double> (M0 + i * (N - 1) + x, N0 + i * (N - 1) + x, viscosity * 5 / (h * h)));
+      else
+        tripletList.push_back (Triplet<double> (M0 + i * (N - 1) + x, N0 + i * (N - 1) + x, viscosity * 4 / (h * h)));
+    }
+    for (int x = 0; x < N - 2; ++x) {
+      tripletList.push_back (Triplet<double> (M0 + i * (N - 1) + 1 + x, N0 + i * (N - 1) + x, -viscosity / (h * h)));
+      tripletList.push_back (Triplet<double> (M0 + i * (N - 1) + x, N0 + i * (N - 1) + 1 + x, -viscosity / (h * h)));
+    }
   }
 
-  laplacian.diagonal (N - 1)    = VectorXd::Constant ((N - 1) * (M - 1), 1);
-  laplacian.diagonal (-(N - 1)) = VectorXd::Constant ((N - 1) * (M - 1), 1);
-
-  return laplacian;
+  for (int i = 0; i < (N - 1) * (M - 1); ++i) {
+    tripletList.push_back (Triplet<double> (M0 + i, N0 + N - 1 + i, -viscosity / (h * h)));
+    tripletList.push_back (Triplet<double> (M0 + N - 1 + i, N0 + i, -viscosity / (h * h)));
+  }
 }
 
-// Create laplacian operator matrix for V.
-MatrixXd makeLaplacianV (const int M, const int N) {
-  // Laplacian maps V -> V_0, so requires an ((M - 1) * N)X((M - 1) * N) matrix.
-  MatrixXd laplacian = MatrixXd::Zero ((M - 1) * N, (M - 1) * N);
-  MatrixXd laplacianBlock = MatrixXd::Zero (N, N);
+void makeLaplacianYBlock (vector<Triplet<double> >& tripletList,
+                          const int M0,
+                          const int N0,
+                          const int M,
+                          const int N,
+                          const double h,
+                          const double viscosity) {
+
+  for (int i = 0; i < M - 1; ++i) {
+    for (int x = 0; x < N; ++x) {
+      if ((x == 0) || (x == (N - 1)))
+        tripletList.push_back (Triplet<double> (M0 + i * N + x, N0 + i * N + x, viscosity * 5 / (h * h)));
+      else
+        tripletList.push_back (Triplet<double> (M0 + i * N + x, N0 + i * N + x, viscosity * 4 / (h * h)));
+    }
+    for (int x = 0; x < (N - 1); ++x) {
+      tripletList.push_back (Triplet<double> (M0 + i * N + x, N0 + i * N + x + 1, -viscosity / (h * h)));
+      tripletList.push_back (Triplet<double> (M0 + i * N + x + 1, N0 + i * N + x, -viscosity / (h * h)));
+    }
+  }
+
+  for (int i = 0; i < N * (M - 2); ++i) {
+    tripletList.push_back (Triplet<double> (M0 + i, N0 + N + i, -viscosity / (h * h)));
+    tripletList.push_back (Triplet<double> (M0 + N + i, N0 + i, -viscosity / (h * h)));
+  }
+}
+
+void makeGradXBlock (vector<Triplet<double> >& tripletList,
+                     const int M0,
+                     const int N0,
+                     const int M,
+                     const int N,
+                     const double h) {
+
+  for (int i = 0; i < N; ++i) {
+    for (int x = 0; x < M - 1; ++x) {
+      tripletList.push_back (Triplet<double> (M0 + i * (M - 1) + x, N0 + i * M + x, -1 / h));
+      tripletList.push_back (Triplet<double> (M0 + i * (M - 1) + x, N0 + i * M + x + 1, 1 / h));
+    }
+  }
+}
+
+void makeGradYBlock (vector<Triplet<double> >& tripletList,
+                     const int M0,
+                     const int N0,
+                     const int M,
+                     const int N,
+                     const double h) {
+
+  for (int i = 0; i < M * (N - 1); ++ i) {
+    tripletList.push_back (Triplet<double> (M0 + i, N0 + i, -1 / h));
+    tripletList.push_back (Triplet<double> (M0 + i, N0 + M + i, 1 / h));
+  }
+}
+
+void makeDivXBlock (vector<Triplet<double> >& tripletList,
+                    const int M0,
+                    const int N0,
+                    const int M,
+                    const int N,
+                    const double h) {
+
+  for (int i = 0; i < M; ++i) {
+    for (int x = 0; x < N - 1; ++x) {
+      tripletList.push_back (Triplet<double> (M0 + i * N + x, N0 + i * (N - 1) + x, 1 / h));
+      tripletList.push_back (Triplet<double> (M0 + i * N + x + 1, N0 + i * (N - 1) + x, -1 / h));
+    }
+  }
+}
+
+void makeDivYBlock (vector<Triplet<double> >& tripletList,
+                    const int M0,
+                    const int N0,
+                    const int M,
+                    const int N,
+                    const double h) {
+
+  for (int i = 0; i < M * (N - 1); ++i) {
+    tripletList.push_back (Triplet<double> (M0 + i, N0 + i, 1 / h));
+    tripletList.push_back (Triplet<double> (M0 + i + N, N0 + i, -1 / h));
+  }
+}
+
+SparseMatrix<double> makeForcingMatrix (const int M,
+                                        const int N) {
+  SparseMatrix<double> forcingMatrix (3 * M * N - M - N, 2 * M * N - M - N);
+  forcingMatrix.reserve (2 * M * N - M - N);
+
+  vector<Triplet<double> > tripletList;
+
+  for (int i = 0; i < 2 * M * N - M - N; ++i)
+    tripletList.push_back (Triplet<double> (i, i, 1));
+
+  forcingMatrix.setFromTriplets (tripletList.begin(), tripletList.end());
+
+  return forcingMatrix;
+}
+
+SparseMatrix<double> makeBoundaryMatrix (const int M,
+                                         const int N,
+                                         const double h,
+                                         const double viscosity) {
+  SparseMatrix<double> boundaryMatrix (3 * M * N - M - N, 2 * M + 2 * N);
+  boundaryMatrix.reserve (3 * M * N - M - N);
+
+  vector<Triplet<double> > tripletList;
   
-  laplacianBlock.diagonal () = VectorXd::Constant (N, -4);
-  laplacianBlock.diagonal (-1) = laplacianBlock.diagonal (1) = VectorXd::Constant (N - 1, 1);
-  laplacianBlock (0, 0) = laplacianBlock (N - 1, N - 1) = -5;
+  makeBCLaplacianXBlock (tripletList, 0,                 0,     M, N, h, viscosity);
+  makeBCLaplacianYBlock (tripletList, M * (N - 1),       2 * M, M, N, h, viscosity);
+  makeBCDivXBlock       (tripletList, 2 * M * N - M - N, 0,     M, N, h);
+  makeBCDivYBlock       (tripletList, 2 * M * N - M - N, 2 * M, M, N, h);
 
-  for (int i = 0; i < M - 1; ++i) 
-    laplacian.block (i * N, i * N, N, N) = laplacianBlock;
+  boundaryMatrix.setFromTriplets (tripletList.begin(), tripletList.end());
 
-  laplacian.diagonal (N) = laplacian.diagonal (-N) = VectorXd::Constant ((M - 2) * N, 1);
-
-  return laplacian;
+  return boundaryMatrix;
 }
 
-// Create X-dimension gradient operator matrix
-MatrixXd makeGradX (const int M, const int N) {
-  
-  return -1 * makeDivX (M, N).transpose();
+void makeBCLaplacianXBlock (vector<Triplet<double> >& tripletList,
+                            const int M0,
+                            const int N0,
+                            const int M,
+                            const int N,
+                            const double h,
+                            const double viscosity) {
+
+  for (int i = 0; i < M; ++i) {
+    tripletList.push_back (Triplet<double> (M0 + i * (N - 1),           N0 + i * 2,     viscosity / (h * h)));
+    tripletList.push_back (Triplet<double> (M0 + (i + 1) * (N - 1) - 1,       N0 + i * 2 + 1, viscosity / (h * h)));
+  }
 }
 
-// Create Y-dimension gradient operator matrix
-MatrixXd makeGradY (const int M, const int N) {
-  
-  return -1 * makeDivY (M, N).transpose();
+void makeBCLaplacianYBlock (vector<Triplet<double> >& tripletList,
+                            const int M0,
+                            const int N0,
+                            const int M,
+                            const int N,
+                            const double h,
+                            const double viscosity) {
+  for (int i = 0; i < N; ++i) {
+    tripletList.push_back (Triplet<double> (M0 + i,               N0 + i, viscosity / (h * h)));
+    tripletList.push_back (Triplet<double> (M0 + (M - 2) * N + i, N0 + N + i, viscosity / (h * h)));
+  }
 }
 
-// Create X-dimension divergence operator matrix
-MatrixXd makeDivX (const int M, const int N) {
-  MatrixXd divX     = MatrixXd::Zero (M * N, M * (N - 1));
-  MatrixXd divBlock = MatrixXd::Zero (N,     N - 1);
-
-  divBlock.diagonal ()   = VectorXd::Constant (N - 1,  1);
-  divBlock.diagonal (-1) = VectorXd::Constant (N - 1, -1);
-
-  for (int i = 0; i < M; ++i) 
-    divX.block (i * N, i * (N - 1), N, N - 1) = divBlock;
-
-  return divX;
+void makeBCDivXBlock (vector<Triplet<double> >& tripletList,
+                      const int M0,
+                      const int N0,
+                      const int M,
+                      const int N,
+                      const double h) {
+  for (int i = 0; i < N; ++i) {
+    tripletList.push_back (Triplet<double> (M0 + i * M,           N0 + i * 2,      1 / h));
+    tripletList.push_back (Triplet<double> (M0 + (i + 1) * M - 1, N0 + i * 2 + 1, -1 / h));
+  }
 }
 
-// Create Y-dimension divergence operator matrix
-MatrixXd makeDivY (const int M, const int N) {
-  MatrixXd divY = MatrixXd::Zero (M * N, (M - 1) * N);
+void makeBCDivYBlock (vector<Triplet<double> >& tripletList,
+                      const int M0,
+                      const int N0,
+                      const int M,
+                      const int N,
+                      const double h) {
 
-  divY.diagonal ()   = VectorXd::Constant ((M - 1) * N,  1);
-  divY.diagonal (-N) = VectorXd::Constant ((M - 1) * N, -1);
-
-  return divY;
+  for (int i = 0; i < N; ++i) {
+    tripletList.push_back (Triplet<double> (M0 + i, N0 + i, 1 / h));
+    tripletList.push_back (Triplet<double> (M0 + (M - 1) * N + i, N0 + N + i, -1 / h));
+  }
 }
-
-
-
-MatrixXd makeBCLaplacianU (const int M, const int N) {
-  MatrixXd laplacianBC      = MatrixXd::Zero (M * (N - 1), 2 * M);
-  MatrixXd laplacianBCBlock = MatrixXd::Zero (N - 1,       2);
-
-  laplacianBCBlock (0, 0) = laplacianBCBlock (N - 2, 1) = 1;
-
-  for (int i = 0; i < M; ++i)
-    laplacianBC.block (i * (N - 1), i * 2, N - 1, 2) = laplacianBCBlock;
-
-  return laplacianBC;
-}
-
-MatrixXd makeBCLaplacianV (const int M, const int N) {
-  MatrixXd laplacianBC      = MatrixXd::Zero ((M - 1) * N, 2 * N);
-  MatrixXd laplacianBCBlock = MatrixXd::Zero (N, N);
-
-  laplacianBCBlock.diagonal () = VectorXd::Constant (N, 1);
-
-  laplacianBC.block (0, 0, N, N) = laplacianBCBlock;
-  laplacianBC.block ((M - 2) * N, N, N, N) = laplacianBCBlock;
-
-  return laplacianBC;
-}
-
-MatrixXd makeBCDivX (const int M, const int N) {
-  MatrixXd divBC      = MatrixXd::Zero (M * N, 2 * M);
-  MatrixXd divBCBlock = MatrixXd::Zero (N,     2);
-
-  divBCBlock (0, 0) = 1; divBCBlock (N - 1, 1) = -1;
-
-  for (int i = 0; i < M; ++i)
-    divBC.block (i * N, i * 2, N, 2) = divBCBlock;
-
-  return divBC;
-}
-
-MatrixXd makeBCDivY (const int M, const int N) {
-  MatrixXd divBC      = MatrixXd::Zero     (M * N, 2 * N);
-
-  divBC.block (0,           0, N, N) =  MatrixXd::Identity (N, N);
-  divBC.block ((M - 1) * N, N, N, N) =  -1 * MatrixXd::Identity (N, N);
-
-  return divBC;
-}
+*/

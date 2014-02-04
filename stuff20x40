@@ -1,5 +1,5 @@
-set N=20
-set M=40
+set M=20
+set N=40
 
 set viscosity=1.0
 

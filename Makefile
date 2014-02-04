@@ -1,6 +1,6 @@
 EXECUTABLE   := mc-mini
 
-MODULES      = paramParse
+MODULES      = paramParse matrixForms
 
 # Build directories and files
 BUILD_DIR    := build/
@@ -21,12 +21,12 @@ OBJECTS      := $(foreach src,$(SOURCES),$(patsubst $(SRC_DIR)%.cpp,$(OBJ_DIR)%.
 # C/C++ compiler
 CC           := g++
 # C/C++ compiler flags
-CFLAGS       += -Wall -c -Iinclude -fopenmp -std=c++11
+CFLAGS       += -Wall -c -Iinclude -fopenmp -std=c++11 -fopenmp
 
 # C/C++ linker
-LD           := g++
+LD           := g++ 
 # C/C++ linker flags
-LDFLAGS      += 
+LDFLAGS      += -fopenmp
 
 
 vpath %.cpp $(patsubst ' ',':',$(SRC_DIRS))
