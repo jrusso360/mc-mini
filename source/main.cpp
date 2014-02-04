@@ -10,10 +10,8 @@
 #include "paramParse/parser.h"
 
 #include "matrixForms/denseForms.h"
+#include "matrixForms/sparseForms.h"
 
-// THIS WORKS CORRECTLY! DO NOT TOUCH WITHOUT A BACKUP!
-
-using namespace DenseForms;
 using namespace Eigen;
 using namespace std;
 /*
@@ -159,19 +157,26 @@ int main(int argc, char ** argv) {
   Map<Matrix<double, Dynamic, Dynamic, RowMajor> > pSolnMatrix (pSolnData, M, N);
   Map<Matrix<double, Dynamic, Dynamic, RowMajor> > pRhsMatrix  (pRhsData,  M, N);
 
-  /*
-  SparseMatrix<double> A  = makeA (M, N, h, viscosity); 
-  A.makeCompressed();
-  */
+  MatrixXd denseA (3 * M * N - M - N, 3 * M * N - M - N);  
+  DenseForms::makeA (denseA, M, N, h, viscosity);
+  MatrixXd denseForcingMatrix (3 * M * N - M - N, 2 * M * N - M - N);
+  DenseForms::makeForcingMatrix  (denseForcingMatrix, M, N); 
+  MatrixXd denseBoundaryMatrix (3 * M * N - M - N, 2 * M + 2 * N); 
+  DenseForms::makeBoundaryMatrix (denseBoundaryMatrix, M, N, h, viscosity); 
 
-  MatrixXd A;  makeA (A, M, N, h, viscosity);
-  MatrixXd forcingMatrix; makeForcingMatrix  (forcingMatrix, M, N); 
-  MatrixXd boundaryMatrix; makeBoundaryMatrix (boundaryMatrix, M, N, h, viscosity); 
+  SparseMatrix<double> sparseA (3 * M * N - M - N, 3 * M * N - M - N);
+  SparseForms::makeA (sparseA, M, N, h, viscosity);
+  SparseMatrix<double> sparseForcingMatrix (3 * M * N - M - N, 2 * M * N - M - N);
+  SparseForms::makeForcingMatrix (sparseForcingMatrix, M, N);
   
-  cout << A << endl << endl
-       << forcingMatrix << endl << endl
-       << boundaryMatrix << endl << endl;
-  
+  MatrixXd differenceA = denseA + (MatrixXd::Identity (3 * M * N - M - N, 3 * M * N - M - N) * -1 * sparseA);
+  MatrixXd differenceForcing = denseForcingMatrix + (MatrixXd::Identity (3 * M * N - M - N, 3 * M * N - M - N) * - 1 * sparseForcingMatrix);
+  MatrixXd differenceBoundary = denseBoundaryMatrix;
+  cout << differenceA << endl << endl
+       << differenceForcing << endl << endl
+       << differenceBoundary << endl << endl;
+ 
+  /*
   for (int i = 0; i < M; ++i) 
     for (int j = 0; j < N - 1; ++j) 
       uForcingMatrix (i, j) = 3 * cos ((j + 1) * h) * sin ((i + 0.5) * h);
@@ -188,11 +193,7 @@ int main(int argc, char ** argv) {
       vBoundaryMatrix (i, j) = -1 * sin ((j + 0.5) * h) * cos (i * M * h);
  
   rhsVect = forcingMatrix * forcingVect + boundaryMatrix * boundaryVect;
- /* 
-  SparseLU<SparseMatrix<double>, COLAMDOrdering<int> > solver;
-  solver.analyzePattern(A);
-  solver.factorize(A);
-*/
+  
   solnVect = A.householderQr().solve(rhsVect);
 
   cout << uSolnMatrix.colwise().reverse() << endl << endl
@@ -212,7 +213,7 @@ int main(int argc, char ** argv) {
       analyticV (i, j) = - sin ((j + 0.5) * h) * cos ((i + 1) * h);
 
   cout << sqrt((uSolnMatrix - analyticU).squaredNorm() * h * h) << "\t" << sqrt((vSolnMatrix - analyticV).squaredNorm() * h * h) << endl;
-
+*/
   return 0;
 }
 /*

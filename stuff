@@ -3,5 +3,5 @@ set M=4
 
 set viscosity=1.0
 
-set y_extent=4
+set y_extent=3.14159
 

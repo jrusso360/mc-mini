@@ -3,5 +3,5 @@ set N=20
 
 set viscosity=1.0
 
-set y_extent=3.1415926
+set y_extent=3.14159
 

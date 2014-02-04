@@ -1,12 +1,18 @@
 #pragma once
 
+#include <vector>
+
 #include <Eigen/Sparse>
 
+using namespace Eigen;
+using namespace std;
+
 namespace SparseForms {
-  SparseMatrix <double> makeA (const int M, 
-                               const int N, 
-                               const double h, 
-                               const double viscosity);
+  void makeA (SparseMatrix<double>& A,
+              const int M,                              
+              const int N, 
+              const double h, 
+              const double viscosity);
 
   void makeLaplacianXBlock (vector<Triplet<double> >& tripletList,
                             const int M0,
@@ -52,13 +58,15 @@ namespace SparseForms {
                       const int N,
                       const double h);
 
-  SparseMatrix<double> makeForcingMatrix (const int M,
-                                          const int N);
+  void makeForcingMatrix (SparseMatrix<double>& forcingMatrix,
+                          const int M,
+                          const int N);
 
-  SparseMatrix<double> makeBoundaryMatrix (const int N,
-                                           const int M,
-                                           const double h,
-                                           const double viscosity);
+  void makeBoundaryMatrix (Ref<SparseMatrix<double> > boundaryMatrix,
+                           const int N,
+                           const int M,
+                           const double h,
+                           const double viscosity);
 
   void makeBCLaplacianXBlock (vector<Triplet<double> >& tripletList,
                               const int M0,
@@ -68,7 +76,7 @@ namespace SparseForms {
                               const double h,
                               const double viscosity);
 
-  void makeBCLaplacianYBlock (vector<Triplet>double> >& tripletList,
+  void makeBCLaplacianYBlock (vector<Triplet<double> >& tripletList,
                               const int M0,
                               const int N0,
                               const int M,
