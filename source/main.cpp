@@ -30,7 +30,7 @@ int main(int argc, char ** argv) {
   pp.getParamDouble ("viscosity", viscosity);
 
   pp.getParamDouble ("y_extent", y_extent);
-  h = y_extent / N;
+  h = y_extent / M;
 
   // Set up locations of data in memory
   double * solnData     = new double[3 * M * N - M - N];
