@@ -32,8 +32,7 @@ namespace DenseForms {
                             const double h,
                             const double viscosity) {
     if (DEBUG) cerr << "Creating LaplacianXBlock." << endl;
-    laplacian               = MatrixXd::Zero (M * (N - 1), M * (N - 1));
-    MatrixXd laplacianBlock = MatrixXd::Zero (N - 1,       N - 1);
+    MatrixXd laplacianBlock = MatrixXd::Zero (N - 1, N - 1);
 
     laplacianBlock.diagonal ()   = VectorXd::Constant (N - 1, viscosity * 4 / (h * h));
     laplacianBlock.diagonal (-1) = laplacianBlock.diagonal (1) = VectorXd::Constant (N - 2, -viscosity / (h * h));
@@ -57,8 +56,7 @@ namespace DenseForms {
                             const double h,
                             const double viscosity) {
     if (DEBUG) cerr << "Creating LaplacianYBlock." << endl;
-    laplacian               = MatrixXd::Zero ((M - 1) * N, (M - 1) * N);
-    MatrixXd laplacianBlock = MatrixXd::Zero (N,           N);
+    MatrixXd laplacianBlock = MatrixXd::Zero (N, N);
 
     laplacianBlock.diagonal () = VectorXd::Constant (N, viscosity * 4 / (h * h));
     laplacianBlock.diagonal (-1) = laplacianBlock.diagonal (1) = VectorXd::Constant (N - 1, -viscosity / (h * h));

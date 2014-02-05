@@ -1,5 +1,5 @@
-set M=6
-set N=12
+set M=5
+set N=10
 
 set viscosity=1.0
 

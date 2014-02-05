@@ -62,7 +62,7 @@ namespace SparseForms {
                           const int M,
                           const int N);
 
-  void makeBoundaryMatrix (Ref<SparseMatrix<double> > boundaryMatrix,
+  void makeBoundaryMatrix (SparseMatrix<double>& boundaryMatrix,
                            const int N,
                            const int M,
                            const double h,
