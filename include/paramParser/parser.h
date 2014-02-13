@@ -3,14 +3,14 @@
 #include <vector>
 #include <string>
 
-#include "paramParse/paramTree.h"
+#include "paramParser/paramTree.h"
 
 using namespace std;
 
-class paramParser {
+class ParamParser {
   public:
-    paramParser (string);
-    ~paramParser ();
+    ParamParser (string);
+    ~ParamParser ();
 
     bool push (string);
     bool tryPush (string);
@@ -32,7 +32,7 @@ class paramParser {
     void queryParamDoubleVect (string, vector<double>&, const vector<double>);
     
   private:
-    paramTree * treeBase;
+    ParamTree * treeBase;
 };
 
 vector<string> inline stringSplit (const string &source, const char *delimiter = " ", bool keepEmpty = false) {

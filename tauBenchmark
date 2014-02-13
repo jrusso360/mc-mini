@@ -1,0 +1,28 @@
+enter geometryParams
+  set M=10
+  set N=20
+leave
+
+enter problemParams
+  set cfl=0.5
+
+  set startTime=0.0
+  set endTime=1.0
+
+  set yExtent=3.14159
+
+  set viscosity=1.0
+  set diffusivity=1.0
+  set buoyancy=1.0
+
+  set forcingModel=tauBenchmark
+
+  set temperatureModel=sineWave
+  enter initialTemperature
+    set xModes=2
+    set yModes=2
+    set temperatureScale=100.0
+  leave
+
+  set boundaryModel=tauBenchmark
+leave

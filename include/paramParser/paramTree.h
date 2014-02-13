@@ -5,18 +5,18 @@
 
 using namespace std;
 
-class paramNode {
+class ParamNode {
   public:
-    ~paramNode();
-    paramNode * parent;
-    map <string, paramNode *> children;
+    ~ParamNode();
+    ParamNode * parent;
+    map <string, ParamNode *> children;
     map <string, string> params;
 };
 
-class paramTree {
+class ParamTree {
   public:
-    paramTree ();
-    ~paramTree ();
+    ParamTree ();
+    ~ParamTree ();
 
     void moveUp (string);
     void moveDown ();
@@ -26,6 +26,6 @@ class paramTree {
     void addParam (string, string);
     void delParam (string);
   private:
-    paramNode * rootNode;
-    paramNode * focusNode;
+    ParamNode * rootNode;
+    ParamNode * focusNode;
 };

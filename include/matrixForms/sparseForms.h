@@ -8,11 +8,11 @@ using namespace Eigen;
 using namespace std;
 
 namespace SparseForms {
-  void makeA (SparseMatrix<double>& A,
-              const int M,                              
-              const int N, 
-              const double h, 
-              const double viscosity);
+  void makeStokesMatrix (SparseMatrix<double>& stokesMatrix,
+                         const int M,                              
+                         const int N, 
+                         const double h, 
+                         const double viscosity);
 
   void makeLaplacianXBlock (vector<Triplet<double> >& tripletList,
                             const int M0,

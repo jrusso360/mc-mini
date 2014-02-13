@@ -9,12 +9,12 @@
 using namespace Eigen;
 
 namespace SparseForms {
-  void makeA (SparseMatrix<double>& A,
-              const int M,
-              const int N,
-              const double h,
-              const double viscosity) {
-    if (DEBUG) cerr << "Creating A." << endl;
+  void makeStokesMatrix (SparseMatrix<double>& stokesMatrix,
+                         const int M,
+                         const int N,
+                         const double h,
+                         const double viscosity) {
+    if (DEBUG) cerr << "Creating stokesMatrix." << endl;
 
     vector<Triplet<double> > tripletList;
 
@@ -25,7 +25,7 @@ namespace SparseForms {
     makeDivXBlock       (tripletList, 2 * M * N - M - N, 0,                 M, N, h);
     makeDivYBlock       (tripletList, 2 * M * N - M - N, M * (N - 1),       M, N, h);
     
-    A.setFromTriplets (tripletList.begin(), tripletList.end());
+    stokesMatrix.setFromTriplets (tripletList.begin(), tripletList.end());
   }
 
   void makeLaplacianXBlock (vector<Triplet<double> >& tripletList,
@@ -35,7 +35,9 @@ namespace SparseForms {
                             const int N,
                             const double h,
                             const double viscosity) {
+
     if (DEBUG) cerr << "Creating LaplacianXBlock." << endl;
+
     for (int i = 0; i < M; ++i) {
       for (int x = 0; x < (N - 1); ++x) {
         if ((i == 0) || (i == (M - 1)))

@@ -2,30 +2,30 @@
 #include <string>
 #include <map>
 
-#include "paramParse/parserException.h"
-#include "paramParse/paramTree.h"
+#include "paramParser/parserException.h"
+#include "paramParser/paramTree.h"
 
 using namespace std;
 
-paramNode::~paramNode () {
-  for (map<string, paramNode *>::iterator it = children.begin(); it != children.end(); ++it) {
+ParamNode::~ParamNode () {
+  for (map<string, ParamNode *>::iterator it = children.begin(); it != children.end(); ++it) {
     delete (it->second);
   }
 }
 
-paramTree::paramTree () {
-  rootNode = focusNode = new paramNode;
+ParamTree::ParamTree () {
+  rootNode = focusNode = new ParamNode;
   focusNode->parent = NULL;
   cerr << "Initialized parameter tree." << endl;
 }
 
-paramTree::~paramTree () {
+ParamTree::~ParamTree () {
   delete rootNode;
 }
 
-void paramTree::moveUp (string key) {
+void ParamTree::moveUp (string key) {
   if (focusNode->children.count (key)) {
-    map<string, paramNode *>::iterator iter = focusNode->children.find (key);
+    map<string, ParamNode *>::iterator iter = focusNode->children.find (key);
 
     focusNode = iter->second;
   } else {
@@ -33,7 +33,7 @@ void paramTree::moveUp (string key) {
   } 
 }
 
-void paramTree::moveDown () {
+void ParamTree::moveDown () {
   if (focusNode->parent == NULL) {
     throw -1;
   } else {
@@ -41,7 +41,7 @@ void paramTree::moveDown () {
   }
 }
 
-string paramTree::getParam (string key) {
+string ParamTree::getParam (string key) {
   if (focusNode->params.count (key)) {
     return focusNode->params[key];
   } else {
@@ -49,19 +49,19 @@ string paramTree::getParam (string key) {
   }
 }
 
-void paramTree::addNode (string key) {
+void ParamTree::addNode (string key) {
   if (focusNode->children.count (key)) {
     throw -1;
   } else {
-    paramNode * newNode = new paramNode;
+    ParamNode * newNode = new ParamNode;
     newNode->parent = focusNode;
-    focusNode->children.insert(pair<string, paramNode *> (key, newNode));
+    focusNode->children.insert(pair<string, ParamNode *> (key, newNode));
   }
 }
 
-void paramTree::delNode (string key) {
+void ParamTree::delNode (string key) {
   if (focusNode->children.count (key)) {
-    paramNode * match = focusNode->children.find (key)->second;
+    ParamNode * match = focusNode->children.find (key)->second;
     focusNode->children.erase (key);
     delete match;
   } else {
@@ -69,12 +69,12 @@ void paramTree::delNode (string key) {
   }
 }
 
-void paramTree::addParam (string key, string param) {
+void ParamTree::addParam (string key, string param) {
   focusNode->params.insert(pair<string, string> (key, param));
   cerr << "Wrote " << key << " as " << param << endl;
 }
 
-void paramTree::delParam (string key) {
+void ParamTree::delParam (string key) {
   if (focusNode->params.count (key)) {
     focusNode->params.erase (key);
   } else {

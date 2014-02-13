@@ -1,10 +1,10 @@
 #include <iostream>
+#include <cassert>
 
 #include <Eigen/Dense>
 
 #include "matrixForms/denseForms.h"
-
-#define DEBUG true
+#include "debug.h"
 
 using namespace Eigen;
 using namespace std;
@@ -16,6 +16,8 @@ namespace DenseForms {
               const double h,
               const double viscosity) {
     if (DEBUG) cerr << "Creating A." << endl;
+
+
     A = MatrixXd::Zero (3 * M * N - M - N, 3 * M * N - M - N);
 
     makeLaplacianXBlock (A.block (0,                 0,                 M * (N - 1), M * (N - 1)), M, N, h, viscosity);
@@ -32,6 +34,7 @@ namespace DenseForms {
                             const double h,
                             const double viscosity) {
     if (DEBUG) cerr << "Creating LaplacianXBlock." << endl;
+
     MatrixXd laplacianBlock = MatrixXd::Zero (N - 1, N - 1);
 
     laplacianBlock.diagonal ()   = VectorXd::Constant (N - 1, viscosity * 4 / (h * h));
@@ -56,6 +59,7 @@ namespace DenseForms {
                             const double h,
                             const double viscosity) {
     if (DEBUG) cerr << "Creating LaplacianYBlock." << endl;
+    
     MatrixXd laplacianBlock = MatrixXd::Zero (N, N);
 
     laplacianBlock.diagonal () = VectorXd::Constant (N, viscosity * 4 / (h * h));
@@ -73,6 +77,7 @@ namespace DenseForms {
                        const int N,
                        const double h) {
     if (DEBUG) cerr << "Creating GradXBLock." << endl;
+    
     MatrixXd gradBlock = MatrixXd::Zero (N - 1, N);
 
     gradBlock.diagonal()  = VectorXd::Constant (N - 1, -1 / h);
@@ -80,7 +85,6 @@ namespace DenseForms {
 
     for (int i = 0; i < M; ++i)
       grad.block (i * (N - 1), i * N, N - 1, N) = gradBlock;
-
   }
 
   void makeGradYBlock (Ref<MatrixXd> grad,
@@ -98,6 +102,7 @@ namespace DenseForms {
                       const int N,
                       const double h) {
     if (DEBUG) cerr << "Creating DivXBLock." << endl;
+
     div               = MatrixXd::Zero (M * N, M * (N - 1));
     MatrixXd divBlock = MatrixXd::Zero (N,     N - 1);
 
@@ -113,6 +118,7 @@ namespace DenseForms {
                       const int N,
                       const double h) {
     if (DEBUG) cerr << "Creating DivYBlock." << endl;
+    
     div = MatrixXd::Zero (M * N, (M - 1) * N);
 
     div.diagonal ()   = VectorXd::Constant ((M - 1) * N,  1 / h);
@@ -123,6 +129,7 @@ namespace DenseForms {
                           const int M,
                           const int N) {
     if (DEBUG) cerr << "Creating ForcingMatrix." << endl;
+
     forcingMatrix = MatrixXd::Zero (3 * M * N - M - N, 2 * M * N - M - N);
 
     forcingMatrix.block (0, 0, 2 * M * N - M - N, 2 * M * N - M - N) = MatrixXd::Identity (2 * M * N - M - N, 2 * M * N - M - N);
@@ -134,6 +141,7 @@ namespace DenseForms {
                            const double h,
                            const double viscosity) {
     if (DEBUG) cerr << "Creating BoundaryMatrix." << endl;
+    
     boundaryMatrix = MatrixXd::Zero (3 * M * N - M - N, 2 * M + 2 * N);
 
     makeBCLaplacianXBlock (boundaryMatrix.block (0,                 0,     M * (N - 1), 2 * M), M, N, h, viscosity);
@@ -148,6 +156,7 @@ namespace DenseForms {
                               const double h,
                               const double viscosity) {
     if (DEBUG) cerr << "Creating BCLaplacianXBlock." << endl;
+    
     laplacianBC               = MatrixXd::Zero (M * (N - 1), 2 * M);
     MatrixXd laplacianBCBlock = MatrixXd::Zero (N - 1,       2);
 
@@ -163,6 +172,7 @@ namespace DenseForms {
                               const double h,
                               const double viscosity) {
     if (DEBUG) cerr << "Creating BCLaplacianYBlock." << endl;
+    
     laplacianBC               = MatrixXd::Zero ((M - 1) * N, 2 * N);
     MatrixXd laplacianBCBlock = MatrixXd::Zero (N,           N);
 

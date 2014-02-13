@@ -5,17 +5,17 @@
 #include <string>
 #include <ios>
 
-#include "paramParse/paramTree.h"
-#include "paramParse/parser.h"
+#include "paramParser/parser.h"
+#include "paramParser/paramTree.h"
 
 using namespace std;
 
-paramParser::paramParser (const string paramFile) {
+ParamParser::ParamParser (const string paramFile) {
   ifstream paramStream(paramFile);
   string lineBuf;
   vector<string> parseBuf, paramBuf;
   
-  this->treeBase = new paramTree;
+  this->treeBase = new ParamTree;
 
   getline (paramStream, lineBuf);
 
@@ -49,11 +49,11 @@ paramParser::paramParser (const string paramFile) {
   cerr << "Parameter tree built!" << endl << endl;
 }
 
-paramParser::~paramParser () {
+ParamParser::~ParamParser () {
   delete treeBase;
 }
 
-bool paramParser::push (string key) {
+bool ParamParser::push (string key) {
   try {
     treeBase->moveUp (key);
     return true;
@@ -64,7 +64,7 @@ bool paramParser::push (string key) {
   return false;
 }
 
-bool paramParser::tryPush (string key) {
+bool ParamParser::tryPush (string key) {
   try {
     treeBase->moveUp (key);
     return true;
@@ -74,7 +74,7 @@ bool paramParser::tryPush (string key) {
   }
 }
 
-void paramParser::pop () {
+void ParamParser::pop () {
   try {
     treeBase->moveDown ();
   } catch (exception& e) {
@@ -83,7 +83,7 @@ void paramParser::pop () {
   }
 }
 
-void paramParser::getParamString (string key, string& result) {
+void ParamParser::getParamString (string key, string& result) {
   try {
     result = treeBase->getParam (key);
   } catch (exception& e) {
@@ -93,7 +93,7 @@ void paramParser::getParamString (string key, string& result) {
   cerr << key << " = " << result << endl; 
 }
 
-void paramParser::queryParamString (string key, string& result, const string defaultVal = "") {
+void ParamParser::queryParamString (string key, string& result, const string defaultVal = "") {
   try {
     result = treeBase->getParam (key);
   } catch (exception& e) {
@@ -103,7 +103,7 @@ void paramParser::queryParamString (string key, string& result, const string def
   cerr << key << " = " << result << endl; 
 }
 
-void paramParser::getParamStringVect (string key, vector<string>& result) {
+void ParamParser::getParamStringVect (string key, vector<string>& result) {
   try {
     result = stringSplit (treeBase->getParam (key));
   } catch (exception& e) {
@@ -112,7 +112,7 @@ void paramParser::getParamStringVect (string key, vector<string>& result) {
   }
 }
 
-void paramParser::queryParamStringVect (string key, vector<string>& result, const vector<string> defaultValue = vector<string>()) {
+void ParamParser::queryParamStringVect (string key, vector<string>& result, const vector<string> defaultValue = vector<string>()) {
   try {
     result = stringSplit (treeBase->getParam (key));
   } catch (exception& e) {
@@ -121,7 +121,7 @@ void paramParser::queryParamStringVect (string key, vector<string>& result, cons
   }
 }
 
-void paramParser::getParamInt (string key, int& result) {
+void ParamParser::getParamInt (string key, int& result) {
   try {
     string tempBuf = treeBase->getParam (key);
     
@@ -132,7 +132,7 @@ void paramParser::getParamInt (string key, int& result) {
   }
 }
 
-void paramParser::queryParamInt (string key, int& result, const int defaultValue = 0) {
+void ParamParser::queryParamInt (string key, int& result, const int defaultValue = 0) {
   try {
     string tempBuf = treeBase->getParam (key);
 
@@ -143,7 +143,7 @@ void paramParser::queryParamInt (string key, int& result, const int defaultValue
   }
 }
 
-void paramParser::getParamIntVect (string key, vector<int>& result) {
+void ParamParser::getParamIntVect (string key, vector<int>& result) {
   
   try {
     string tempBuf = treeBase->getParam (key);
@@ -158,7 +158,7 @@ void paramParser::getParamIntVect (string key, vector<int>& result) {
   }
 }
 
-void paramParser::queryParamIntVect (string key, vector<int>& result, const vector<int> defaultValue = vector<int> ()) {
+void ParamParser::queryParamIntVect (string key, vector<int>& result, const vector<int> defaultValue = vector<int> ()) {
   try {
     string tempBuf = treeBase->getParam (key);
     vector<string> tempVect = stringSplit (tempBuf);
@@ -170,7 +170,7 @@ void paramParser::queryParamIntVect (string key, vector<int>& result, const vect
   }
 }
 
-void paramParser::getParamDouble (string key, double& result) {
+void ParamParser::getParamDouble (string key, double& result) {
   try {
     string tempBuf = treeBase->getParam (key);
     result = stod (tempBuf);
@@ -180,7 +180,7 @@ void paramParser::getParamDouble (string key, double& result) {
   }
 }
 
-void paramParser::queryParamDouble (string key, double& result, const double defaultValue = 0.0) {
+void ParamParser::queryParamDouble (string key, double& result, const double defaultValue = 0.0) {
   try {
     string tempBuf = treeBase->getParam (key);
     
@@ -191,7 +191,7 @@ void paramParser::queryParamDouble (string key, double& result, const double def
   }
 }
 
-void paramParser::getParamDoubleVect (string key, vector<double>& result) {
+void ParamParser::getParamDoubleVect (string key, vector<double>& result) {
   
   try {
     string tempBuf = treeBase->getParam (key);
@@ -205,7 +205,7 @@ void paramParser::getParamDoubleVect (string key, vector<double>& result) {
   }
 }
 
-void paramParser::queryParamDoubleVect (string key, vector<double>& result, const vector<double> defaultValue = vector<double> ()) {
+void ParamParser::queryParamDoubleVect (string key, vector<double>& result, const vector<double> defaultValue = vector<double> ()) {
   try {
     string tempBuf = treeBase->getParam (key);
     vector<string> tempVect = stringSplit (tempBuf);
