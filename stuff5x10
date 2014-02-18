@@ -1,7 +1,0 @@
-set M=5
-set N=10
-
-set viscosity=1.0
-
-set y_extent=3.1415926
-

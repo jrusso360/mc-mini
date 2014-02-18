@@ -19,14 +19,14 @@ OBJ_DIRS     := $(foreach mdir,$(MODULES),$(addprefix $(OBJ_DIR),$(mdir)/)) $(OB
 OBJECTS      := $(foreach src,$(SOURCES),$(patsubst $(SRC_DIR)%.cpp,$(OBJ_DIR)%.o,$(src)))
 
 # C/C++ compiler
-CC           := g++
+CC           := h5c++
 # C/C++ compiler flags
-CFLAGS       += -Wall -c -Iinclude -fopenmp -std=c++11 -fopenmp
+CFLAGS       += -Wall -c -Iinclude -fopenmp -std=c++11 -fopenmp 
 
 # C/C++ linker
-LD           := g++ 
+LD           := h5c++
 # C/C++ linker flags
-LDFLAGS      += -fopenmp
+LDFLAGS      += -fopenmp 
 
 
 vpath %.cpp $(patsubst ' ',':',$(SRC_DIRS))

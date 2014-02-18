@@ -28,33 +28,41 @@ int main(int argc, char ** argv) {
 
   problem.initializeProblem();
 
-  while (problem.getTime() < problem.getEndTime()) {
-    problem.setForcingTerms();
-    problem.solveStokes();
-    problem.solveAdvectionDiffusion();
-    problem.advanceTimestep();
-  }
+  problem.updateForcingTerms();
+  problem.solveStokes();
+  problem.solveAdvectionDiffusion();
+  problem.advanceTimestep();
 
+  problem.outputTemperature();
+  problem.outputForcing();
+  problem.outputViscosity();
+  problem.outputBoundaryVelocity();
   problem.outputPressure();
   problem.outputVelocity();
-  problem.outputBoundaryVelocity();
-  problem.outputForcing();
-  problem.outputTemperature();
 
-/*
+  problem.outputH5();
+
+  int M = geometry.getM();
+  int N = geometry.getN();
+  double h = problem.getH();
+
   MatrixXd analyticU;
+  Map<Matrix<double, Dynamic, Dynamic, RowMajor> > uSolnMatrix (geometry.getUVelocityData(), M, (N - 1));
   analyticU.resizeLike(uSolnMatrix);
   for (int i = 0; i < M; ++i)
     for (int j = 0; j < N - 1; ++j)
       analyticU (i, j) = cos ((j + 1) * h) * sin ((i + 0.5) * h);
 
   MatrixXd analyticV;
+  Map<Matrix<double, Dynamic, Dynamic, RowMajor> > vSolnMatrix (geometry.getVVelocityData(), (M - 1), N);
   analyticV.resizeLike(vSolnMatrix);
   for (int i = 0; i < M - 1; ++i)
     for (int j = 0; j < N; ++j)
       analyticV (i, j) = - sin ((j + 0.5) * h) * cos ((i + 1) * h);
 
-  cout << sqrt((uSolnMatrix - analyticU).squaredNorm() * h * h) << "\t" << sqrt((vSolnMatrix - analyticV).squaredNorm() * h * h) << endl;
-  */
+  cout << sqrt((uSolnMatrix - analyticU).squaredNorm() * h * h) 
+       << "\t" 
+       << sqrt((vSolnMatrix - analyticV).squaredNorm() * h * h) << endl;
+  
   return 0;
 }

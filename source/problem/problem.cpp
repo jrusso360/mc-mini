@@ -35,21 +35,23 @@ ProblemStructure::ProblemStructure
     assert (((xExtent == 0) ^ (yExtent == 0)));
     
     if (xExtent == 0) {
-      dx      = yExtent / M;
-      xExtent = dx * N;
+      dx      = yExtent / double(M);
+      xExtent = dx * double(N);
     } else {
-      dx      = xExtent / N;
-      yExtent = dx * M;
+      dx      = xExtent / double(N);
+      yExtent = dx * double(M);
     }
 
-    parser.getParamDouble   ("viscosity",        viscosity);
     parser.getParamDouble   ("diffusivity",      diffusivity);
     parser.getParamDouble   ("buoyancy",         buoyancy);
 
     parser.queryParamString ("forcingModel",     forcingModel,     "tauBenchmark");
     parser.queryParamString ("temperatureModel", temperatureModel, "constant");
+    parser.queryParamString ("viscosityModel",   viscosityModel,   "constant");
     parser.queryParamString ("boundaryModel",    boundaryModel,    "tauBenchmark");
-    
+
+    parser.queryParamString ("outputFile",       outputFile,       "output.h5");
+
     parser.pop();
   }
 }
@@ -61,6 +63,10 @@ ProblemStructure::~ProblemStructure() {
 void ProblemStructure::advanceTimestep() {
   time += dt;
   timestepNumber++;
+}
+
+double ProblemStructure::getH() {
+  return dx;
 }
 
 double ProblemStructure::getTime() {

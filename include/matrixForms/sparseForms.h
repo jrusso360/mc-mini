@@ -9,10 +9,10 @@ using namespace std;
 
 namespace SparseForms {
   void makeStokesMatrix (SparseMatrix<double>& stokesMatrix,
-                         const int M,                              
-                         const int N, 
-                         const double h, 
-                         const double viscosity);
+                         const int M,
+                         const int N,
+                         const double h,
+                         const double * viscosity);
 
   void makeLaplacianXBlock (vector<Triplet<double> >& tripletList,
                             const int M0,
@@ -20,7 +20,7 @@ namespace SparseForms {
                             const int M,
                             const int N,
                             const double h,
-                            const double viscosity);
+                            const double * viscosity);
 
   void makeLaplacianYBlock (vector<Triplet<double> >& tripletList,
                             const int M0,
@@ -28,7 +28,7 @@ namespace SparseForms {
                             const int M,
                             const int N,
                             const double h,
-                            const double viscosity);
+                            const double * viscosity);
 
   void makeGradXBlock (vector<Triplet<double> >& tripletList,
                        const int M0,
@@ -66,7 +66,7 @@ namespace SparseForms {
                            const int N,
                            const int M,
                            const double h,
-                           const double viscosity);
+                           const double * viscosity);
 
   void makeBCLaplacianXBlock (vector<Triplet<double> >& tripletList,
                               const int M0,
@@ -74,7 +74,7 @@ namespace SparseForms {
                               const int M,
                               const int N,
                               const double h,
-                              const double viscosity);
+                              const double * viscosity);
 
   void makeBCLaplacianYBlock (vector<Triplet<double> >& tripletList,
                               const int M0,
@@ -82,7 +82,7 @@ namespace SparseForms {
                               const int M,
                               const int N,
                               const double h,
-                              const double viscosity);
+                              const double * viscosity);
 
   void makeBCDivXBlock (vector<Triplet<double> >& tripletList,
                         const int M0,

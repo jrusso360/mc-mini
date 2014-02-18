@@ -10,11 +10,13 @@ class ProblemStructure {
     // Initialize problem (set dt, temperature, boundary.)
     void initializeProblem();
     void initializeTimestep();
+    void initializeViscosity();
     void initializeTemperature();
     void initializeBoundary();
 
     // Main loop equations.
-    void setForcingTerms();
+    void updateForcingTerms();
+    void updateViscosity();
     void solveStokes();
     void solveAdvectionDiffusion();
     void advanceTimestep();
@@ -27,8 +29,13 @@ class ProblemStructure {
     void outputVelocity();
     void outputBoundaryVelocity();
     void outputForcing();
+    void outputViscosity();
     void outputTemperature();
+    void outputBoundaryTemperature();
 
+    void outputH5();
+
+    double getH();
     double getTime();
     double getEndTime();
 
@@ -38,7 +45,9 @@ class ProblemStructure {
 
     string forcingModel;
     string temperatureModel;
+    string viscosityModel;
     string boundaryModel;
+    string outputFile;
 
     int M;
     int N;

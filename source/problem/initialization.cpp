@@ -19,6 +19,7 @@ void ProblemStructure::initializeProblem() {
   initializeTimestep();
   initializeTemperature();
   initializeBoundary();
+  initializeViscosity();
 }
 
 void ProblemStructure::initializeTimestep() {
@@ -93,5 +94,42 @@ void ProblemStructure::initializeBoundary() {
     for (int i = 0; i < 2; ++i)
       for (int j = 0; j < N; ++j)
         vVelocityBoundaryData [i * N + j] = -sin ((j + 0.5) * dx) * cos (i * M * dx);
+  } else if (boundaryModel == "solCXBenchmark") {
+    for (int i = 0; i < M; ++i) 
+      for (int j = 0; j < 2; ++j)
+        uVelocityBoundaryData [i * 2 + j] = 0;
+    for (int i = 0; i < 2; ++i) 
+      for (int j = 0; j < N; ++j) 
+        vVelocityBoundaryData [i * N + j] = 0;
+  }
+}
+
+void ProblemStructure::initializeViscosity() {
+  double * viscosityData = geometry.getViscosityData();
+
+  double viscosity;
+
+  if (viscosityModel == "constant") {
+    if (parser.push ("problemParams")) {
+      if (parser.tryPush ("initialViscosity")) {
+        parser.queryParamDouble ("viscosityScale", viscosity, 1.0);
+      
+        parser.pop();
+      } else {
+        viscosity = 1.0;
+      }
+      parser.pop();
+    }
+
+    for (int i = 0; i < (M + 1); ++i)
+      for (int j = 0; j < (N + 1); ++j)
+        viscosityData[i * (N + 1) + j] = viscosity;
+  } else if (viscosityModel == "tauBenchmark") {
+    viscosity = 1.0;
+  } else if (viscosityModel == "solCXBenchmark") {
+    for (int i = 0; i < (M + 1); ++i)
+      for (int j = 0; j < (N + 1); ++j) 
+        viscosityData[i * (N + 1) + j] = (j * dx <= xExtent / 2) ? 1.0 : 1.0E06;
+    viscosity = 1E06;
   }
 }

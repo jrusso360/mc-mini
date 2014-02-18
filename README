@@ -1,0 +1,1 @@
+Simple solver for stokes equation with temperature Advection/Diffusion. Eigen3 and libhdf5-dev packages are required to run.
