@@ -32,7 +32,7 @@ int main(int argc, char ** argv) {
   problem.solveStokes();
   problem.solveAdvectionDiffusion();
   problem.advanceTimestep();
-
+/*
   problem.outputTemperature();
   problem.outputForcing();
   problem.outputViscosity();
@@ -41,7 +41,7 @@ int main(int argc, char ** argv) {
   problem.outputVelocity();
 
   problem.outputH5();
-
+*/
   int M = geometry.getM();
   int N = geometry.getN();
   double h = problem.getH();
