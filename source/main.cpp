@@ -10,9 +10,10 @@
 
 #include "matrixForms/sparseForms.h"
 #include "matrixForms/denseForms.h"
-#include "paramParser/parser.h"
 #include "geometry/geometry.h"
 #include "problem/problem.h"
+#include "output/output.h"
+#include "parser/parser.h"
 
 
 using namespace Eigen;
@@ -20,11 +21,15 @@ using namespace std;
 
 int main(int argc, char ** argv) {
 
-  assert (argc > 1);
+  if (argc == 1) {
+    cerr << "usage: " << string{argv[0]} << " <parameter file>." << endl << endl;
+    exit (-1);
+  }
 
-  ParamParser pp(string{argv[1]});
-  GeometryStructure geometry (pp);
-  ProblemStructure problem (pp, geometry);
+  ParamParser parser(string{argv[1]});
+  GeometryStructure geometry (parser);
+  ProblemStructure  problem  (parser, geometry);
+//  OutputStructure   output   (parser, geometry, problem);
 
   problem.initializeProblem();
 
@@ -32,7 +37,7 @@ int main(int argc, char ** argv) {
   problem.solveStokes();
   problem.solveAdvectionDiffusion();
   problem.advanceTimestep();
-/*
+  
   problem.outputTemperature();
   problem.outputForcing();
   problem.outputViscosity();
@@ -41,7 +46,8 @@ int main(int argc, char ** argv) {
   problem.outputVelocity();
 
   problem.outputH5();
-*/
+ 
+
   int M = geometry.getM();
   int N = geometry.getN();
   double h = problem.getH();

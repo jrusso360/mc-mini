@@ -3,7 +3,7 @@
 #include <vector>
 #include <string>
 
-#include "paramParser/paramTree.h"
+#include "parser/paramTree.h"
 
 using namespace std;
 

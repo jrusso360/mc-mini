@@ -1,6 +1,6 @@
 EXECUTABLE   := mc-mini
 
-MODULES      = paramParser matrixForms geometry problem
+MODULES      = parser matrixForms geometry problem output
 
 # Build directories and files
 BUILD_DIR    := build/

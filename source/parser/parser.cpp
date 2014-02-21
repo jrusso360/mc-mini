@@ -1,17 +1,24 @@
 #include <exception>
 #include <iostream>
 #include <fstream>
+#include <cassert>
 #include <vector>
 #include <string>
 #include <ios>
 
-#include "paramParser/parser.h"
-#include "paramParser/paramTree.h"
+#include "parser/paramTree.h"
+#include "parser/parser.h"
 
 using namespace std;
 
 ParamParser::ParamParser (const string paramFile) {
+
   ifstream paramStream(paramFile);
+  if (paramStream.fail()) {
+    cerr << "<Error> Opening parameter file \"" << paramFile 
+         << "\" failed! Shutting down now." << endl;
+    exit (-1);
+  }
   string lineBuf;
   vector<string> parseBuf, paramBuf;
   

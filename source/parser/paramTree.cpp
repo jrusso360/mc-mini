@@ -2,8 +2,8 @@
 #include <string>
 #include <map>
 
-#include "paramParser/parserException.h"
-#include "paramParser/paramTree.h"
+#include "parser/parserException.h"
+#include "parser/paramTree.h"
 
 using namespace std;
 

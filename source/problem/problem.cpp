@@ -5,9 +5,9 @@
 #include <Eigen/Sparse>
 
 #include "matrixForms/sparseForms.h"
-#include "paramParser/parser.h"
 #include "geometry/geometry.h"
 #include "problem/problem.h"
+#include "parser/parser.h"
 
 using namespace Eigen;
 using namespace std;

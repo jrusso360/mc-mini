@@ -5,9 +5,9 @@
 #include <Eigen/Sparse>
 
 #include "matrixForms/sparseForms.h"
-#include "paramParser/parser.h"
 #include "geometry/geometry.h"
 #include "problem/problem.h"
+#include "parser/parser.h"
 
 /*
  *
@@ -32,16 +32,16 @@ void ProblemStructure::initializeTimestep() {
 void ProblemStructure::initializeTemperature() {
   double * temperatureData = geometry.getTemperatureData();
 
-  double scale;
+  double referenceTemperature;
+  double temperatureScale;
 
   if (parser.push ("problemParams")) {
-    if (parser.tryPush ("initialTemperature")) {
-      parser.queryParamDouble ("temperatureScale", scale, 100.0);
+    if (parser.push ("initialTemperature")) {
+      parser.queryParamDouble ("referenceTemperature", referenceTemperature, 273.15);
+      parser.queryParamDouble ("temperatureScale",     temperatureScale,     100.0);
 
       parser.pop();
-    } else {
-      scale = 100.0;
-    }
+    } 
     parser.pop();
   }
   
@@ -49,7 +49,7 @@ void ProblemStructure::initializeTemperature() {
     
     for (int i = 0; i < N; ++i) 
       for (int j = 0; j < M; ++j) 
-        temperatureData[j * N + i] = scale;
+        temperatureData[j * N + i] = referenceTemperature;
    
   } else if (temperatureModel == "sineWave") {
     int xModes;
@@ -61,24 +61,26 @@ void ProblemStructure::initializeTemperature() {
         parser.queryParamInt ("yModes", yModes, 2);
 
         parser.pop();
-      } else {
-        xModes = 2;
-        yModes = 2;
-      }
+      } 
 
       parser.pop();
     }
 
     for (int i = 0; i < N; ++i)
       for (int j = 0; j < M; ++j)
-        temperatureData[j * N + i] = sin ((i + 0.5) * dx * xModes * M_PI / xExtent) * 
-                                     sin ((j + 0.5) * dx * yModes * M_PI / yExtent) * scale;
+        temperatureData[j * N + i] = referenceTemperature +
+                                     sin ((i + 0.5) * dx * xModes * M_PI / xExtent) * 
+                                     sin ((j + 0.5) * dx * yModes * M_PI / yExtent) * 
+                                     temperatureScale;
+
   } else if (temperatureModel == "squareWave") {
     for (int i = 0; i < N; ++i)
       for (int j = 0; j < M; ++j)
-        temperatureData[j * N + i] = 
+        temperatureData[j * N + i] = referenceTemperature +
             ((xExtent * 0.25 < (i + 0.5) * dx && (i + 0.5) * dx < xExtent * 0.75) &&
-             (yExtent * 0.25 < (j + 0.5) * dx && (j + 0.5) * dx < yExtent * 0.75)) ? scale : 0;
+             (yExtent * 0.25 < (j + 0.5) * dx && (j + 0.5) * dx < yExtent * 0.75)) ? 
+            temperatureScale : 
+            -temperatureScale;
   }
 }
 

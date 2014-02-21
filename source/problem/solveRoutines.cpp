@@ -3,11 +3,13 @@
 #include <cmath>
 
 #include <Eigen/Sparse>
+#include <Eigen/Dense>
 
 #include "matrixForms/sparseForms.h"
-#include "paramParser/parser.h"
+#include "matrixForms/denseForms.h"
 #include "geometry/geometry.h"
 #include "problem/problem.h"
+#include "parser/parser.h"
 
 using namespace Eigen;
 using namespace std;
@@ -44,7 +46,43 @@ void ProblemStructure::updateForcingTerms() {
       for (int j = 0; j < N; ++j)
         vForcingData [i * N + j] = - sin((j + 1) * M_PI * dx) * cos ((i + 0.5) * M_PI * dx);
 
-  } 
+  } else if (forcingModel == "buoyancy") {
+    double * temperatureData = geometry.getTemperatureData();
+
+    double referenceTemperature;
+    double densityConstant;
+    double thermalExpansion;
+
+    if (parser.push ("problemParams")) {
+      if (parser.push ("buoyancyModel")) {
+        parser.queryParamDouble ("referenceTemperature", referenceTemperature, 273.15);
+        parser.queryParamDouble ("densityConstant",      densityConstant,      100.0);
+        parser.queryParamDouble ("thermalExpansion",     thermalExpansion,       1.0);
+
+        parser.pop();
+      }
+
+      parser.pop();
+    }
+
+    for (int i = 0; i < M; ++i)
+      for (int j = 0; j < (N - 1); ++j)
+        uForcingData [i * (N - 1) + j] = 0;
+
+    for (int i = 0; i < (M - 1); ++i)
+      for (int j = 0; j < N; ++j) {
+
+        vForcingData [i * N + j] = ((temperatureData [i * N + j] + 
+                                    temperatureData [(i + 1) * N + j]) / 2 -
+                                    referenceTemperature) *
+                                    densityConstant *
+                                    thermalExpansion; 
+        cerr << "(" << i << ", " << j << "): " 
+             << temperatureData [i * N + j] << " + " 
+             << temperatureData [(i + 1) * N + j] << ") / 2 = " 
+             << vForcingData [i * (N - 1) + j] << endl;
+      }
+  }
 }
 
 // Solve the stokes equation
@@ -53,7 +91,6 @@ void ProblemStructure::solveStokes() {
   Map<VectorXd> stokesSolnVector (geometry.getStokesData(), M * (N - 1) + (M - 1) * N + M * N);
   
   static SparseMatrix<double> stokesMatrix   (3 * M * N - M - N, 3 * M * N - M - N);
-
   static SparseMatrix<double> forcingMatrix  (3 * M * N - M - N, 2 * M * N - M - N);
   static SparseMatrix<double> boundaryMatrix (3 * M * N - M - N, 2 * M + 2 * N);
   static SparseLU<SparseMatrix<double>, COLAMDOrdering<int> > solver;
@@ -77,7 +114,8 @@ void ProblemStructure::solveStokes() {
     initialized = true;
   }
 
-  stokesSolnVector = solver.solve (forcingMatrix * Map<VectorXd>(geometry.getForcingData(), 2 * M * N - M - N) + boundaryMatrix * Map<VectorXd>(geometry.getVelocityBoundaryData(), 2 * M + 2 * N));
+  stokesSolnVector = solver.solve (forcingMatrix  * Map<VectorXd>(geometry.getForcingData(), 2 * M * N - M - N) + 
+                                   boundaryMatrix * Map<VectorXd>(geometry.getVelocityBoundaryData(), 2 * M + 2 * N));
 }
 
 // Solve the advection/diffusion equation
