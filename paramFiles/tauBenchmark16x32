@@ -30,3 +30,6 @@ enter problemParams
 
   set boundaryModel=tauBenchmark
 leave
+
+enter outputParams
+leave

@@ -26,9 +26,8 @@ void ProblemStructure::forwardEuler (double delta_t) {
   }
 }
 
-
-
 void ProblemStructure::crankNicolson (double delta_t) {
   Map<VectorXd> temperatureVector (geometry.getTemperatureData(), M * N);
+
 
 }

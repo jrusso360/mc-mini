@@ -2,9 +2,9 @@
 # the geometry of the problem (size of the domain, dimensions, etc...)
 enter geometryParams
   # Rows in the problem domain
-  set M=4
+  set M=32
   # Columns in the problem domain
-  set N=4
+  set N=32
 leave
 
 # Problem parameter section. Includes parameters describing the specifics of the
@@ -27,6 +27,8 @@ enter problemParams
   # Temperature diffusivity constant of the material model
   set diffusivity=1.0
 
+  set buoyancy=1.0
+
   # Forcing model for the given problem. Options include:
   # tauBenchmark : 
   #     Forcing model taken from Tau (1991; JCP Vol. 99). No additional
@@ -48,7 +50,7 @@ enter problemParams
     # Material density constant for the buoyancy calculation.
     set densityConstant=100.0
     # Thermal expansion constant for the buoyancy calculation.
-    set thermalExpansion=1.0
+    set thermalExpansion=0.5
   leave
 
   # Temperature model for the given problem. Options include:
@@ -74,7 +76,7 @@ enter problemParams
     # Number of modes in the y-direction for use with sineWave initial conditions.
     set yModes=2
     # Amplitude of the perturbation from reference temperature.
-    set temperatureScale=100.0
+    set temperatureScale=10.0
   leave
 
   # Viscosity model for the given problem. Options include:
@@ -117,5 +119,5 @@ enter outputParams
   # Output format. Current output method only supports hdf5 output.
   set outputFormat=hdf5
   # Output filename. Specifies the filename for the output file.
-  set outputFilename=output.h5
+  set outputFilename=output
 leave

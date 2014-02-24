@@ -71,16 +71,11 @@ void ProblemStructure::updateForcingTerms() {
 
     for (int i = 0; i < (M - 1); ++i)
       for (int j = 0; j < N; ++j) {
-
-        vForcingData [i * N + j] = ((temperatureData [i * N + j] + 
-                                    temperatureData [(i + 1) * N + j]) / 2 -
-                                    referenceTemperature) *
-                                    densityConstant *
-                                    thermalExpansion; 
-        cerr << "(" << i << ", " << j << "): " 
-             << temperatureData [i * N + j] << " + " 
-             << temperatureData [(i + 1) * N + j] << ") / 2 = " 
-             << vForcingData [i * (N - 1) + j] << endl;
+        vForcingData [i * N + j] =  -1 * densityConstant *
+                                    (1 - thermalExpansion * 
+                                     ((temperatureData [i * N + j] + 
+                                       temperatureData [(i + 1) * N + j]) / 2 -
+                                      referenceTemperature));
       }
   }
 }

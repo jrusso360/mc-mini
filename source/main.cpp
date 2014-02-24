@@ -29,7 +29,7 @@ int main(int argc, char ** argv) {
   ParamParser parser(string{argv[1]});
   GeometryStructure geometry (parser);
   ProblemStructure  problem  (parser, geometry);
-//  OutputStructure   output   (parser, geometry, problem);
+  OutputStructure   output   (parser, geometry, problem);
 
   problem.initializeProblem();
 
@@ -37,16 +37,10 @@ int main(int argc, char ** argv) {
   problem.solveStokes();
   problem.solveAdvectionDiffusion();
   problem.advanceTimestep();
-  
-  problem.outputTemperature();
-  problem.outputForcing();
-  problem.outputViscosity();
-  problem.outputBoundaryVelocity();
-  problem.outputPressure();
-  problem.outputVelocity();
 
-  problem.outputH5();
- 
+  output.writeHDF5File();
+
+  problem.outputVelocity();
 
   int M = geometry.getM();
   int N = geometry.getN();

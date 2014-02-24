@@ -6,11 +6,18 @@
 
 class OutputStructure {
   public:
-    OutputStructure (ParamParser& pp, GeometryStructure& gs, ProblemStructure& ps);
+    OutputStructure (ParamParser&       pp,
+                     GeometryStructure& gs,
+                     ProblemStructure&  ps);
+
     ~OutputStructure();
 
-    void writeFile ();
+    void writeDefaultFile();
+    void writeDefaultFile (const int timestep);
 
+    void writeHDF5File();
+    void writeHDF5File (int timestep);
+  
   private:
     ParamParser&       parser;
     GeometryStructure& geometry;
