@@ -35,11 +35,11 @@ ProblemStructure::ProblemStructure
     assert (((xExtent == 0) ^ (yExtent == 0)));
     
     if (xExtent == 0) {
-      dx      = yExtent / double(M);
-      xExtent = dx * double(N);
+      h      = yExtent / double(M);
+      xExtent = h * double(N);
     } else {
-      dx      = xExtent / double(N);
-      yExtent = dx * double(M);
+      h      = xExtent / double(N);
+      yExtent = h * double(M);
     }
 
     parser.getParamDouble   ("diffusivity",      diffusivity);
@@ -60,17 +60,44 @@ ProblemStructure::~ProblemStructure() {
 }                                   
 
 
-void ProblemStructure::advanceTimestep() {
-  time += dt;
+bool ProblemStructure::advanceTimestep() {
+  time += deltaT;
   timestepNumber++;
+
+  return (time < endTime);
+}
+
+void ProblemStructure::recalculateTimestep() {
+  Map<VectorXd> uVelocityVector (geometry.getUVelocityData(), M *       (N - 1));
+  Map<VectorXd> vVelocityVector (geometry.getVVelocityData(), (M - 1) * N);
+  Map<VectorXd> uVelocityBoundaryVector (geometry.getUVelocityBoundaryData(), 2 * N);
+  Map<VectorXd> vVelocityBoundaryVector (geometry.getVVelocityBoundaryData(), 2 * M);
+
+  double maxInteriorUVelocity = uVelocityVector.maxCoeff();
+  double maxBoundaryUVelocity = uVelocityBoundaryVector.maxCoeff();
+  double maxUVelocity = (maxInteriorUVelocity > maxBoundaryUVelocity) ? maxInteriorUVelocity : maxBoundaryUVelocity;
+
+  double maxInteriorVVelocity = vVelocityVector.maxCoeff();
+  double maxBoundaryVVelocity = vVelocityBoundaryVector.maxCoeff();
+  double maxVVelocity = (maxInteriorVVelocity > maxBoundaryVVelocity) ? maxInteriorVVelocity : maxBoundaryVVelocity;
+  double velocityDeltaT = cfl * h / sqrt (maxUVelocity * maxUVelocity + maxVVelocity * maxVVelocity);
+  if (maxUVelocity == 0 || maxVVelocity == 0)
+    velocityDeltaT = INT_MAX;
+  double diffusionDeltaT = cfl * h / diffusivity;
+
+  deltaT = (velocityDeltaT < diffusionDeltaT) ? velocityDeltaT : diffusionDeltaT;
 }
 
 double ProblemStructure::getH() {
-  return dx;
+  return h;
 }
 
 double ProblemStructure::getTime() {
   return time;
+}
+
+int ProblemStructure::getTimestepNumber() {
+  return timestepNumber;
 }
 
 double ProblemStructure::getEndTime() {

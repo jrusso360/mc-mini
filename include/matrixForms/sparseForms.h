@@ -97,4 +97,11 @@ namespace SparseForms {
                         const int M,
                         const int N,
                         const double h);
+
+  void makeForwardEulerMatrix (SparseMatrix<double> matrix,
+                               const int M,
+                               const int N,
+                               const double dt,
+                               const double diffusivity,
+                               const double h);
 }

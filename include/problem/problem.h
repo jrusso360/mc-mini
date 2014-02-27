@@ -12,18 +12,24 @@ class ProblemStructure {
     void initializeTimestep();
     void initializeViscosity();
     void initializeTemperature();
-    void initializeBoundary();
+    void initializeTemperatureBoundary();
+    void initializeVelocityBoundary();
 
     // Main loop equations.
     void updateForcingTerms();
     void updateViscosity();
     void solveStokes();
+    void recalculateTimestep();
     void solveAdvectionDiffusion();
-    void advanceTimestep();
+    bool advanceTimestep();
 
-    // Advection/diffusion methods
-    void forwardEuler  (double dt);
-    void crankNicolson (double dt);
+    // Advection methods
+    void upwindMethod();
+
+    // Diffusion methods
+    void forwardEuler();
+    void backwardEuler();
+    void crankNicolson();
 
     void outputPressure();
     void outputVelocity();
@@ -38,6 +44,7 @@ class ProblemStructure {
     double getH();
     double getTime();
     double getEndTime();
+    int getTimestepNumber();
 
   private:
     ParamParser& parser;
@@ -56,12 +63,12 @@ class ProblemStructure {
 
     double time;
     double endTime;
-    double dt;
+    double deltaT;
     int timestepNumber;
 
     double xExtent;
     double yExtent;
-    double dx;
+    double h;
 
     double viscosity;
     double diffusivity;

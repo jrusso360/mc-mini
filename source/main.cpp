@@ -32,15 +32,20 @@ int main(int argc, char ** argv) {
   OutputStructure   output   (parser, geometry, problem);
 
   problem.initializeProblem();
-
+  
   problem.updateForcingTerms();
   problem.solveStokes();
-  problem.solveAdvectionDiffusion();
-  problem.advanceTimestep();
 
-  output.writeHDF5File();
+  do {
+    output.writeHDF5File(problem.getTimestepNumber());
 
-  problem.outputVelocity();
+    problem.updateForcingTerms();
+    problem.solveStokes();
+    problem.recalculateTimestep();
+    problem.solveAdvectionDiffusion();
+
+  } while (problem.advanceTimestep());
+
 
   int M = geometry.getM();
   int N = geometry.getN();

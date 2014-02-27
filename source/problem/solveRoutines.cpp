@@ -30,11 +30,11 @@ void ProblemStructure::updateForcingTerms() {
     // Benchmark taken from Tau (1991; JCP Vol. 99)
     for (int i = 0; i < M; ++i)
       for (int j = 0; j < N - 1; ++j)
-        uForcingData [i * (N - 1) + j] = 3 * cos ((j + 1) * dx) * sin ((i + 0.5) * dx);
+        uForcingData [i * (N - 1) + j] = 3 * cos ((j + 1) * h) * sin ((i + 0.5) * h);
 
     for (int i = 0; i < M - 1; ++i)
       for (int j = 0; j < N; ++j)
-        vForcingData [i * N + j] = -sin ((j + 0.5) * dx) * cos ((i + 1) * dx);
+        vForcingData [i * N + j] = -sin ((j + 0.5) * h) * cos ((i + 1) * h);
 
   } else if (forcingModel == "solCXBenchmark") {
     // solCX Benchmark taken from Kronbichler et al. (2011)
@@ -44,7 +44,7 @@ void ProblemStructure::updateForcingTerms() {
 
     for (int i = 0; i < M - 1; ++i)
       for (int j = 0; j < N; ++j)
-        vForcingData [i * N + j] = - sin((j + 1) * M_PI * dx) * cos ((i + 0.5) * M_PI * dx);
+        vForcingData [i * N + j] = - sin((j + 1) * M_PI * h) * cos ((i + 0.5) * M_PI * h);
 
   } else if (forcingModel == "buoyancy") {
     double * temperatureData = geometry.getTemperatureData();
@@ -96,11 +96,11 @@ void ProblemStructure::solveStokes() {
 
   if (!(initialized) || !(viscosityModel=="constant")) {
 
-    SparseForms::makeStokesMatrix   (stokesMatrix,   M, N, dx, viscosityData);
+    SparseForms::makeStokesMatrix   (stokesMatrix,   M, N, h, viscosityData);
     stokesMatrix.makeCompressed();
     SparseForms::makeForcingMatrix  (forcingMatrix,  M, N);
     forcingMatrix.makeCompressed();
-    SparseForms::makeBoundaryMatrix (boundaryMatrix, M, N, dx, viscosityData);
+    SparseForms::makeBoundaryMatrix (boundaryMatrix, M, N, h, viscosityData);
     boundaryMatrix.makeCompressed();
 
     solver.analyzePattern (stokesMatrix);
@@ -116,5 +116,6 @@ void ProblemStructure::solveStokes() {
 // Solve the advection/diffusion equation
 // U X T -> T
 void ProblemStructure::solveAdvectionDiffusion() {
-  crankNicolson (dt);
+  // upwindMethod();
+  backwardEuler();
 }

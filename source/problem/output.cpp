@@ -19,9 +19,9 @@ void ProblemStructure::outputH5() {
   double *x = new double[N + 1];
   double *y = new double[M + 1];
   for (int i = 0; i < N + 1; ++i)
-    x[i] = dx * i;
+    x[i] = h * i;
   for (int j = 0; j < M + 1; ++j)
-    y[j] = dx * j;
+    y[j] = h * j;
 
   double *temperatureData = geometry.getTemperatureData();
 
