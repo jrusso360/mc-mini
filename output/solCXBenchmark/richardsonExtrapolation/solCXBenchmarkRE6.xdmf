@@ -1,0 +1,35 @@
+<?xml version="1.0"?><!DOCTYPE Xdmf SYSTEM "Xdmf.dtd" []><Xdmf Version="2.0">
+  <Domain>
+    <Grid GridType="Uniform" Name="mesh">
+      <Topology NumberOfElements="65 65" TopologyType="2DCoRectMesh" />
+      <Geometry GeometryType="Origin_DxDy">
+        <DataItem Dimensions="2">
+          0 0
+        </DataItem>
+        <DataItem Dimensions="2">
+          0.015625 0.015625
+        </DataItem>
+      </Geometry>
+      <Attribute AttributeType="Scalar" Center="Cell" Name="Temperature">
+        <DataItem Dimensions="64 64" Format="HDF" NumberType="Float" Precision="8">solCXBenchmarkRE6.h5:/Temperature
+</DataItem>
+      </Attribute>
+      <Attribute AttributeType="Scalar" Center="Cell" Name="Pressure">
+        <DataItem Dimensions="64 64" Format="HDF" NumberType="Float" Precision="8">solCXBenchmarkRE6.h5:/Pressure
+</DataItem>
+      </Attribute>
+      <Attribute AttributeType="Scalar" Center="Cell" Name="UVelocity">
+        <DataItem Dimensions="64 64" Format="HDF" NumberType="Float" Precision="8">solCXBenchmarkRE6.h5:/UVelocity
+</DataItem>
+      </Attribute>
+      <Attribute AttributeType="Scalar" Center="Cell" Name="VVelocity">
+        <DataItem Dimensions="64 64" Format="HDF" NumberType="Float" Precision="8">solCXBenchmarkRE6.h5:/VVelocity
+</DataItem>
+      </Attribute>
+      <Attribute AttributeType="Scalar" Center="Cell" Name="Divergence">
+        <DataItem Dimensions="64 64" Format="HDF" NumberType="Float" Precision="8">solCXBenchmarkRE6.h5:/Divergence
+</DataItem>
+      </Attribute>
+      </Grid>
+  </Domain>
+</Xdmf>
