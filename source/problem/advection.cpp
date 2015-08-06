@@ -14,7 +14,7 @@
 using namespace Eigen;
 using namespace std;
 
-// upwind method. Stable but inefficient.
+// Upwind method. Stable but inefficient.
 void ProblemStructure::upwindMethod() {
   Map<VectorXd> temperatureVector (geometry.getTemperatureData(), M * N);
   Map<VectorXd> temperatureBoundaryVector (geometry.getTemperatureBoundaryData(), 2 * M);
@@ -25,7 +25,7 @@ void ProblemStructure::upwindMethod() {
   DataWindow<double> vVelocityBoundaryWindow (geometry.getVVelocityBoundaryData(), N, 2);
 
   double leftVelocity, rightVelocity, bottomVelocity, topVelocity;
-  double leftFlux, rightFlux, bottomFlux, topFlux;
+  double G_Flux[], F_Flux[];
 
   VectorXd temporaryVector = temperatureVector;
 
@@ -45,46 +45,47 @@ void ProblemStructure::upwindMethod() {
                         vVelocityBoundaryWindow (j, 1) :
                         vVelocityWindow (j, i);
 
-      leftFlux = rightFlux = 0;
-      topFlux = bottomFlux = 0;
+		
       
       // Solve the Riemann problem on the neighboring velocities and calculate
       // the fluxes accross each edge.
-      if (j > 0) {
+		
         if (leftVelocity < 0) {
-          leftFlux = temporaryVector (i * N + j) * leftVelocity * deltaT / h;
+			F_Flux[j-1] = temporaryVector (i * N + j) * leftVelocity;
         } else {
-          leftFlux = temporaryVector (i * N + (j - 1)) * leftVelocity * deltaT / h;
+			F_Flux[j-1] = temporaryVector (i * N + (j - 1)) * leftVelocity;
         }
-      }
+		
 
-      if (j < (N - 1)) {
+	  
         if (rightVelocity > 0) {
-          rightFlux = temporaryVector (i * N + j) * rightVelocity * deltaT / h;
+			F_Flux[j] = temporaryVector (i * N + j) * rightVelocity;
         } else {
-          rightFlux = temporaryVector (i * N + (j + 1)) * rightVelocity * deltaT / h;
+			F_Flux[j]= temporaryVector (i * N + (j + 1)) * rightVelocity;
         }
-      }
+	  
 
-      if (i > 0) {
+		
         if (bottomVelocity < 0) {
-          bottomFlux = temporaryVector (i * N + j) * bottomVelocity * deltaT / h;
+          G_Flux[i-1] = temporaryVector (i * N + j) * bottomVelocity;
         } else {
-          bottomFlux = temporaryVector ((i - 1) * N + j) * bottomVelocity * deltaT / h;
+          G_Flux[i-1] = temporaryVector ((i - 1) * N + j) * bottomVelocity;
         }
-      }
+		  
 
-      if (i < (M - 1)) {
+		
         if (topVelocity > 0) {
-          topFlux = temporaryVector (i * N + j) * topVelocity * deltaT / h;
+          G_Flux[i] = temporaryVector (i * N + j) * topVelocity;
         } else {
-          topFlux = temporaryVector ((i + 1) * N + j) * topVelocity * deltaT / h;
+          G_Flux[i] = temporaryVector ((i + 1) * N + j) * topVelocity;
         }
-      }
+		
+
+      // Standard Conservative Finite Difference Update
 
       temperatureVector (i * N + j) = temporaryVector (i * N + j) + 
-                                        leftFlux - rightFlux +
-                                        bottomFlux - topFlux;
+										(deltaT / h) * (F_Flux(j-1,i) - F_Flux(j,i)) +
+                                        (deltaT / h) * (G_Flux(j,i-1) - G_Flux(j,i));
     }
   }
 }
