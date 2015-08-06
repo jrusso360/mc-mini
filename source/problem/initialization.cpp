@@ -86,7 +86,17 @@ void ProblemStructure::initializeTemperature() {
           temperatureWindow (j, i) = referenceTemperature + temperatureScale;
         else
           temperatureWindow (j, i) = referenceTemperature;
+      
+        
+      }else if (temperatureModel == "gaussian") {
+        double center_x=M/2.0;
+        double center_y=N/2.0;
+        for (int i = 0; i < N; ++i)
+          for (int j= 0; j < M; ++j) {
+           temperatureWindow (j, i) = referenceTemperature + (exp(-((i-center_y)*((i-center_y))/15+(((j-center_x)*(j-center_x))/15))))*temperatureScale;
       }
+
+      
   } else if (temperatureModel == "circle") {
      double center_x;
      double center_y;
