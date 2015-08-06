@@ -88,6 +88,11 @@ void ProblemStructure::upwindMethod() {
                                         (deltaT / h) * (G_Flux(j,i-1) - G_Flux(j,i));
     }
   }
+
+	//Conservation check by summing all values in the temperature vector
+	double total_temperature = std::accumulate(temperatureVector.begin(),temperatureVector.end(),0);
+	cout << "\The total temperature is: " << total_temperature << endl;
+
 }
 
 void ProblemStructure::laxWendroff() {
