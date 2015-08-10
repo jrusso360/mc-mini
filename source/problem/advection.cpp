@@ -87,6 +87,10 @@ void ProblemStructure::upwindMethod() {
                                         bottomFlux - topFlux;
     }
   }
+
+  //Conservation check by summing all values in the temperature vector
+	cout << " The total temperature is " << temperatureVector.sum();
+  
 }
 
 void ProblemStructure::laxWendroff() {
