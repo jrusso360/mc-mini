@@ -91,23 +91,23 @@ void ProblemStructure::upwindMethod() {
   //Conservation check by summing all values in the temperature vector
 	cout << " The total temperature is " << temperatureVector.sum();
   //Symmetry Checker: Checks temperature value of two cells split along center of the domain to see if they are equal for a given EPS.
-    	     double symmetry_EPS = 1E-12;
-    	     if ( (N * M) % 2 == 0) {
+    	     //double symmetry_EPS = 1E-12;
+    	     //if ( (N * M) % 2 == 0) {
              //This means we have an even length for our vector.
-		if (abs((temperatureVector((N * M)/2) - temperatureVector(((N * M)/2)+1))) < symmetry_EPS) {
-		  cout << " \nThe temperature field is symmetric. " ;}
-		 else {
-		  cout << " \nThe temperature field is not symmetric. " ;}
-    	     	}
+		//if (abs((temperatureVector((N * M)/2) - temperatureVector(((N * M)/2)+1))) < symmetry_EPS) {
+		  //cout << " \nThe temperature field is symmetric. " ;}
+		 //else {
+		  //cout << " \nThe temperature field is not symmetric. " ;}
+    	     //	}
 			
-	    else {
+	    //else {
              //This means we have an odd length for our vector.
-	        if (abs((temperatureVector(((N * M)/2)-1) - temperatureVector(((N * M)/2)+1))) < symmetry_EPS) {
-                  cout << " \nThe temperature field is symmetric. " ;}
-                 else {
-                  cout << " \nThe temperature field is not symmetric. " ;}
+	        //if (abs((temperatureVector(((N * M)/2)-1) - temperatureVector(((N * M)/2)+1))) < symmetry_EPS) {
+              //    cout << " \nThe temperature field is symmetric. " ;}
+                // else {
+                 // cout << " \nThe temperature field is not symmetric. " ;}
                 
-               }
+             //  }
     	     
 
 }
