@@ -239,9 +239,11 @@ void ProblemStructure::frommMethod() {
 
         halfTimeUOffsetTemperatureWindow (j, i) += 
             temperatureWindow (j, i) +
-              (h / 2 - deltaT / 2 * cellCenteredUVelocityWindow (j, i)) * 
-                (rightNeighborT - leftNeighborT) / (2 * h);
-      }
+              //(h / 2 - deltaT / 2 * cellCenteredUVelocityWindow (j, i)) *
+                //(rightNeighborT - leftNeighborT) / (2 * h);
+		      0.5 * h * (1.0 + deltaT * cellCenteredUVelocityWindow (j + 1, i)) *
+		      (1.0 / h) * (rightNeighborT - leftNeighborT) / 2.0;
+	  }
       
       // One or both velocities are negative. Take the flux from the right
       // neighboring cell.
@@ -255,14 +257,15 @@ void ProblemStructure::frommMethod() {
 
         halfTimeUOffsetTemperatureWindow (j, i) += 
             temperatureWindow (j + 1, i) -
-              (h / 2 + deltaT / 2 * cellCenteredUVelocityWindow (j + 1, i)) * 
-                (rightNeighborT - leftNeighborT) / (2 * h); 
-      
+              //(h / 2 + deltaT / 2 * cellCenteredUVelocityWindow (j + 1, i)) *
+                //(rightNeighborT - leftNeighborT) / (2 * h);
+			     0.5 * h * (1.0 + deltaT * cellCenteredUVelocityWindow (j + 1, i)) *
+				 (1.0 / h) * (rightNeighborT - leftNeighborT) / 2.0;
       }
 
       // Velocities are in opposing directions. Take the average of the fluxes
       // from the left and right neighboring cells
-      if (riemannFlag == 0b11) halfTimeUOffsetTemperatureWindow (j, i) /= 2;
+      if (riemannFlag == 0b11) halfTimeUOffsetTemperatureWindow (j, i) /= 2.0;
 
     }
   }
@@ -307,10 +310,13 @@ void ProblemStructure::frommMethod() {
 
         halfTimeVOffsetTemperatureWindow (j, i) +=
             temperatureWindow (j, i) -
-              (h / 2 + deltaT / 2 * cellCenteredVVelocityWindow (j, i)) * 
-               (topNeighborT - bottomNeighborT) / (2 * h);
-      }
-      
+              //(h / 2 + deltaT / 2 * cellCenteredVVelocityWindow (j, i)) *
+               //(topNeighborT - bottomNeighborT) / (2 * h);
+			  0.5 * h * (1.0 + deltaT * cellCenteredVVelocityWindow (j, i)) *
+			  (1.0 / h) * (topNeighborT - bottomNeighborT) / 2.0;
+
+	  }
+		
       // One or both velocities are negative. Take the flux from the top
       // neighboring cell
       if (riemannFlag & 0b10) {
@@ -323,14 +329,16 @@ void ProblemStructure::frommMethod() {
 
         halfTimeVOffsetTemperatureWindow (j, i) += 
             temperatureWindow (j, i + 1) +
-              (h / 2 - deltaT / 2 * cellCenteredVVelocityWindow (j, i + 1)) * 
-               (topNeighborT - bottomNeighborT) / (2 * h);
-      }
+              //(h / 2 - deltaT / 2 * cellCenteredVVelocityWindow (j, i + 1)) *
+               //(topNeighborT - bottomNeighborT) / (2 * h);
+		      0.5 * h * (1.0 + deltaT * cellCenteredVVelocityWindow (j, i)) *
+		      (1.0 / h) * (topNeighborT - bottomNeighborT) / 2.0;
+	  }
 
       // Velocities are in opposing directions. Take the average of the fluxes
       // from the left and right neighboring cells.
       if (riemannFlag == 0b11) {
-        halfTimeVOffsetTemperatureWindow (j, i) /= 2;
+        halfTimeVOffsetTemperatureWindow (j, i) /= 2.0;
       }
     }
   }
