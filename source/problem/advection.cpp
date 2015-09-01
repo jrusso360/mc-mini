@@ -241,8 +241,8 @@ void ProblemStructure::frommMethod() {
             temperatureWindow (j, i) +
               //(h / 2 - deltaT / 2 * cellCenteredUVelocityWindow (j, i)) *
                 //(rightNeighborT - leftNeighborT) / (2 * h);
-		      0.5 * h * (1.0 - deltaT * cellCenteredUVelocityWindow (j + 1, i)) *
-		      (1.0 / h) * (rightNeighborT - leftNeighborT) / 2.0;
+		      0.5 * (1.0 - (deltaT/h) * cellCenteredUVelocityWindow (j + 1, i)) *
+		      (rightNeighborT - leftNeighborT) / 2.0;
 	  }
       
       // One or both velocities are negative. Take the flux from the right
@@ -259,8 +259,8 @@ void ProblemStructure::frommMethod() {
             temperatureWindow (j + 1, i) -
               //(h / 2 + deltaT / 2 * cellCenteredUVelocityWindow (j + 1, i)) *
                 //(rightNeighborT - leftNeighborT) / (2 * h);
-			     0.5 * h * (1.0 + deltaT * cellCenteredUVelocityWindow (j + 1, i)) *
-				 (1.0 / h) * (rightNeighborT - leftNeighborT) / 2.0;
+			     0.5 * (1.0 + (deltaT/h) * cellCenteredUVelocityWindow (j + 1, i)) *
+				  (rightNeighborT - leftNeighborT) / 2.0;
       }
 
       // Velocities are in opposing directions. Take the average of the fluxes
@@ -312,8 +312,8 @@ void ProblemStructure::frommMethod() {
             temperatureWindow (j, i) -
               //(h / 2 + deltaT / 2 * cellCenteredVVelocityWindow (j, i)) *
                //(topNeighborT - bottomNeighborT) / (2 * h);
-			  0.5 * h * (1.0 + deltaT * cellCenteredVVelocityWindow (j, i)) *
-			  (1.0 / h) * (topNeighborT - bottomNeighborT) / 2.0;
+			  0.5 * (1.0 + (deltaT/h) * cellCenteredVVelocityWindow (j, i)) *
+			    (topNeighborT - bottomNeighborT) / 2.0;
 
 	  }
 		
@@ -331,8 +331,8 @@ void ProblemStructure::frommMethod() {
             temperatureWindow (j, i + 1) +
               //(h / 2 - deltaT / 2 * cellCenteredVVelocityWindow (j, i + 1)) *
                //(topNeighborT - bottomNeighborT) / (2 * h);
-		      0.5 * h * (1.0 - deltaT * cellCenteredVVelocityWindow (j, i)) *
-		      (1.0 / h) * (topNeighborT - bottomNeighborT) / 2.0;
+		      0.5 * (1.0 - (deltaT/h) * cellCenteredVVelocityWindow (j, i)) *
+		      (topNeighborT - bottomNeighborT) / 2.0;
 	  }
 
       // Velocities are in opposing directions. Take the average of the fluxes
