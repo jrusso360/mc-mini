@@ -241,7 +241,7 @@ void ProblemStructure::frommMethod() {
             temperatureWindow (j, i) +
               //(h / 2 - deltaT / 2 * cellCenteredUVelocityWindow (j, i)) *
                 //(rightNeighborT - leftNeighborT) / (2 * h);
-		      0.5 * h * (1.0 + deltaT * cellCenteredUVelocityWindow (j + 1, i)) *
+		      0.5 * h * (1.0 - deltaT * cellCenteredUVelocityWindow (j + 1, i)) *
 		      (1.0 / h) * (rightNeighborT - leftNeighborT) / 2.0;
 	  }
       
@@ -331,7 +331,7 @@ void ProblemStructure::frommMethod() {
             temperatureWindow (j, i + 1) +
               //(h / 2 - deltaT / 2 * cellCenteredVVelocityWindow (j, i + 1)) *
                //(topNeighborT - bottomNeighborT) / (2 * h);
-		      0.5 * h * (1.0 + deltaT * cellCenteredVVelocityWindow (j, i)) *
+		      0.5 * h * (1.0 - deltaT * cellCenteredVVelocityWindow (j, i)) *
 		      (1.0 / h) * (topNeighborT - bottomNeighborT) / 2.0;
 	  }
 
