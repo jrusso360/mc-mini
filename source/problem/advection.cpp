@@ -89,7 +89,7 @@ void ProblemStructure::upwindMethod() {
   }
 
   //Conservation check by summing all values in the temperature vector
-	cout << " The total temperature is " << temperatureVector.sum();
+  	cout << " The total temperature is " << temperatureVector.sum();
   //Symmetry Checker: Checks temperature value of two cells split along center of the domain to see if they are equal for a given EPS.
     	     //double symmetry_EPS = 1E-12;
     	     //if ( (N * M) % 2 == 0) {
@@ -241,9 +241,10 @@ void ProblemStructure::frommMethod() {
             temperatureWindow (j, i) +
               //(h / 2 - deltaT / 2 * cellCenteredUVelocityWindow (j, i)) *
                 //(rightNeighborT - leftNeighborT) / (2 * h);
-		      0.5 * (1.0 - (deltaT/h) * cellCenteredUVelocityWindow (j + 1, i)) *
-		      (rightNeighborT - leftNeighborT) / 2.0;
-	  }
+		      (0.5 * (1.0 - (deltaT/h) * cellCenteredUVelocityWindow (j , i)) *
+		      (rightNeighborT - leftNeighborT) / 2.0) - deltaT * cellCenteredVVelocityWindow (j , i)
+		  
+		    }
       
       // One or both velocities are negative. Take the flux from the right
       // neighboring cell.
@@ -254,17 +255,20 @@ void ProblemStructure::frommMethod() {
         } else {
           rightNeighborT = temperatureWindow (j + 2, i);
         }
+		  
 
-        halfTimeUOffsetTemperatureWindow (j, i) += 
+
+
+        halfTimeUOffsetTemperatureWindow (j, i) +=
             temperatureWindow (j + 1, i) -
-              //(h / 2 + deltaT / 2 * cellCenteredUVelocityWindow (j + 1, i)) *
-                //(rightNeighborT - leftNeighborT) / (2 * h);
+              (h / 2 + deltaT / 2 * cellCenteredUVelocityWindow (j + 1, i)) *
+                (rightNeighborT - leftNeighborT) / (2 * h);
 			     0.5 * (1.0 + (deltaT/h) * cellCenteredUVelocityWindow (j + 1, i)) *
 				  (rightNeighborT - leftNeighborT) / 2.0;
       }
 
-      // Velocities are in opposing directions. Take the average of the fluxes
-      // from the left and right neighboring cells
+       // Velocities are in opposing directions. Take the average of the fluxes
+       // from the left and right neighboring cells
       if (riemannFlag == 0b11) halfTimeUOffsetTemperatureWindow (j, i) /= 2.0;
 
     }
@@ -331,7 +335,7 @@ void ProblemStructure::frommMethod() {
             temperatureWindow (j, i + 1) +
               //(h / 2 - deltaT / 2 * cellCenteredVVelocityWindow (j, i + 1)) *
                //(topNeighborT - bottomNeighborT) / (2 * h);
-		      0.5 * (1.0 - (deltaT/h) * cellCenteredVVelocityWindow (j, i)) *
+		      0.5 * (1.0 - (deltaT/h) * cellCenteredVVelocityWindow (j, i + 1)) *
 		      (topNeighborT - bottomNeighborT) / 2.0;
 	  }
 
